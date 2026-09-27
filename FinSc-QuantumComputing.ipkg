@@ -7,6 +7,17 @@ depends = FinSc-Dihedron, FinSc-Geometry, FinSc-Multiset-Core, FinSc-Multiset-Tr
 sourcedir = "src"
 
 modules = QuantumComputing,
+          Stage0.Quantum.Circuit,
+          Stage0.Quantum.DeutschJozsa,
+          Stage0.Quantum.QuantumScaleTransforms,
+          Stage0.Quantum.Qubit,
+          Stage0.Quantum.Register,
+          Stage0.Quantum.StateStream,
+          Stage0.Quantum.Teleportation,
+          Stage1.Quantum.DihedralChannels,
+          Stage1.Quantum.LandauerErasure,
+          Stage1.Quantum.NoCloning,
+          Stage1.Quantum.ToricCode,
           Quantum.Circuit,
           Quantum.DeutschJozsa,
           Quantum.DihedralChannels,
@@ -18,5 +29,3 @@ modules = QuantumComputing,
           Quantum.StateStream,
           Quantum.Teleportation,
           Quantum.ToricCode
-
-
