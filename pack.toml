@@ -1,5 +1,5 @@
 [package]
-name = "FinSc-QuantumComputing"
+name = "FinSc-Quantum-Coherence"
 version = "0.1.0"
 authors = ["Justin Kelly"]
 description = "Discrete Constructive Quantum Computing, Qubit Circuits, and Entanglement Engine."

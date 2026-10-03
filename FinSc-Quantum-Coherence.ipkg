@@ -1,12 +1,13 @@
-package FinSc-QuantumComputing
+package FinSc-Quantum-Coherence
 version = 0.1.0
 authors = "Justin Kelly"
-brief   = "Layer 5a Discrete Constructive Quantum Computing, Qubit Circuits, and Entanglement Engine."
+brief   = "Layer 5a Discrete Constructive Quantum Coherence, Qubit Streams, and Entanglement Engine."
 
 depends = FinSc-Dihedron, FinSc-Geometry, FinSc-Multiset, FinSc-Metric-Substrate, FinSc-Multiset-Transform, base, linear
 sourcedir = "src"
 
-modules = QuantumComputing,
+modules = QuantumCoherence,
+          QuantumComputing,
           Stage0.Quantum.Circuit,
           Stage0.Quantum.DeutschJozsa,
           Stage0.Quantum.QuantumScaleTransforms,
