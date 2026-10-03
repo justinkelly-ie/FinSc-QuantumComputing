@@ -3,7 +3,7 @@ version = 0.1.0
 authors = "Justin Kelly"
 brief   = "Layer 5a Discrete Constructive Quantum Coherence, Qubit Streams, and Entanglement Engine."
 
-depends = FinSc-Dihedron, FinSc-Geometry, FinSc-Multiset, FinSc-Metric-Substrate, FinSc-Multiset-Transform, base, linear
+depends = FinSc-Dihedron, FinSc-Geometry, FinSc-Multiset, FinSc-Metric-Substrate, FinSc-Phase-Unfolding, base, linear
 sourcedir = "src"
 
 modules = QuantumCoherence,

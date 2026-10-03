@@ -6,6 +6,6 @@ description = "Discrete Constructive Quantum Computing, Qubit Circuits, and Enta
 
 [dependencies]
 FinSc-Multiset-Core = { path = "../FinSc-Multiset-Core" }
-FinSc-Multiset-Transform = { path = "../FinSc-Multiset-Transform" }
+FinSc-Phase-Unfolding = { path = "../FinSc-Phase-Unfolding" }
 FinSc-Geometry = { path = "../FinSc-Geometry" }
 idris2-Dihedron = { path = "../FinSc-Dihedron" }
