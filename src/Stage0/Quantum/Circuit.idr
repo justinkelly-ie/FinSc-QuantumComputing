@@ -8,7 +8,7 @@ import Stage0.WitnessLedger
 import Stage1.Order.Preorder
 import Stage1.VexelMaxel
 import Stage1.UnixelFraction
-import Stage1.Category.Adjunction
+import Stage1.MultisetDuality
 import Stage1.MaxelTransform
 import Stage1.TypeTheory.Staging
 import Stage1.TypeTheory.TwoLevel
@@ -120,8 +120,9 @@ MultisetAdjunction GatePrepFunctor GateMeasFunctor where
 
 ||| QTT 0 Erased Proof: Quantum Gate Synthesis Multiset Adjunction Duality Invariant
 public export
-0 prfQuantumGateAdjunctionDuality : (n : BoxInt) -> n = n
-prfQuantumGateAdjunctionDuality = prfMultisetDuality
+0 prfQuantumGateAdjunctionDuality : (t : MultisetTensor (GatePrepFunctor Nat) Nat) ->
+                                    gateHomTensorInv (gateHomTensorIso t) = t
+prfQuantumGateAdjunctionDuality = proofGateHomIso
 
 public export
 record WaveToken where
