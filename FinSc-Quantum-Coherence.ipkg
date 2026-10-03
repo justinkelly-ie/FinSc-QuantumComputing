@@ -7,6 +7,7 @@ depends = FinSc-Dihedron, FinSc-Geometry, FinSc-Multiset, FinSc-Metric-Substrate
 sourcedir = "src"
 
 modules = QuantumCoherence,
+          Reflect.QuantumCoherenceAuditor,
           QuantumComputing,
           Stage0.Quantum.Circuit,
           Stage0.Quantum.DeutschJozsa,
