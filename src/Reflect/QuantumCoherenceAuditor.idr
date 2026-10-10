@@ -92,6 +92,26 @@ public export
 auditStreamingLindbladTrace : Elab (Reflect.QuantumCoherenceAuditor.auditStreamingLindbladTraceProofExport = True)
 auditStreamingLindbladTrace = auditWitness Reflect.QuantumCoherenceAuditor.auditStreamingLindbladTraceProofExport
 
+||| Audit 6: Streaming Lindblad Decoherence Non-Negative Dissipated Entropy.
+public export
+auditLindbladLandauerDecoherenceProofExport : Bool
+auditLindbladLandauerDecoherenceProofExport = Stage0.Quantum.StateStream.auditLindbladLandauerDecoherenceProof
+
+public export
+%macro
+auditLindbladLandauerDecoherence : Elab (Reflect.QuantumCoherenceAuditor.auditLindbladLandauerDecoherenceProofExport = True)
+auditLindbladLandauerDecoherence = auditWitness Reflect.QuantumCoherenceAuditor.auditLindbladLandauerDecoherenceProofExport
+
+||| Audit 7: Deforested Boolean State Preparation Expectation Value.
+public export
+auditBooleQuantumStatePreparationProofExport : Bool
+auditBooleQuantumStatePreparationProofExport = Stage0.Quantum.StateStream.auditBooleQuantumStatePreparationProof
+
+public export
+%macro
+auditBooleQuantumStatePreparation : Elab (Reflect.QuantumCoherenceAuditor.auditBooleQuantumStatePreparationProofExport = True)
+auditBooleQuantumStatePreparation = auditWitness Reflect.QuantumCoherenceAuditor.auditBooleQuantumStatePreparationProofExport
+
 ||| Batch quantum coherence auditor witnesses.
 public export
 quantumCoherenceAuditorWitnesses : List Bool
@@ -101,5 +121,8 @@ quantumCoherenceAuditorWitnesses =
   , auditHadamardUnitarityProof
   , auditToricStabilizerCommutativityProof
   , auditStreamingLindbladTraceProofExport
+  , auditLindbladLandauerDecoherenceProofExport
+  , auditBooleQuantumStatePreparationProofExport
   ]
+
 

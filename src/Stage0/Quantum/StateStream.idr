@@ -217,4 +217,77 @@ auditStreamingLindbladTraceProof =
       tr1 = streamTraceDensityNat 10 strm1
   in unwrapBox tr1 == 1
 
+||| Extracts the dissipated off-diagonal coherence from Lindblad damping as a deforested stream.
+public export
+streamLindbladDecoherenceLoss : (gamma : BoxInt) -> FusedStream DensityDyadToken -> FusedStream BoxInt
+streamLindbladDecoherenceLoss gamma (MkStream next seed) =
+  filterMapStream (\dyad =>
+    if ketBasis dyad /= braBasis dyad
+      then Just (mulBox (dyadWeight dyad) gamma)
+      else Nothing)
+    (MkStream next seed)
+
+||| Folds total dissipated entropy from Lindblad decoherence directly across the stream.
+public export
+fusedLindbladDissipatedEntropyNat : (fuel : Nat) -> (gamma : BoxInt) -> FusedStream DensityDyadToken -> BoxInt
+fusedLindbladDissipatedEntropyNat fuel gamma strm =
+  foldStreamNat fuel
+    addBox
+    (intToBoxInt 0)
+    (streamLindbladDecoherenceLoss gamma strm)
+
+||| Audits that pure-to-mixed Lindblad decoherence yields non-negative dissipated entropy.
+public export
+auditLindbladLandauerDecoherenceProof : Bool
+auditLindbladLandauerDecoherenceProof =
+  let superState = [ MkDyadToken ZeroState ZeroState (intToBoxInt 10)
+                   , MkDyadToken ZeroState OneState  (intToBoxInt 10)
+                   , MkDyadToken OneState  ZeroState (intToBoxInt 10)
+                   , MkDyadToken OneState  OneState  (intToBoxInt 10) ]
+      dissipated = fusedLindbladDissipatedEntropyNat 10 (intToBoxInt 1) (stream superState)
+  in unwrapBox dissipated == 20
+
+--------------------------------------------------------------------------------
+-- 6. DEFORESTED TRUTH-TABLE TO QUANTUM STATE STREAM INITIALIZATION
+--------------------------------------------------------------------------------
+
+||| Prepares a deforested Quantum State Stream directly from a Boolean truth function.
+public export
+streamQuantumStateFromBoolFn : (totalStates : Nat) -> (Nat -> Bool) -> FusedStream QuantumStateToken
+streamQuantumStateFromBoolFn totalStates f =
+  MkStream nextStep 0
+    where
+      nextStep : Nat -> Step Nat QuantumStateToken
+      nextStep idx =
+        if idx >= totalStates
+          then Done
+          else let bitVal = f idx
+                   basis = if bitVal then OneState else ZeroState
+                   tok = MkQuantumToken basis (intToBoxInt 1)
+               in Yield tok (S idx)
+
+||| Prepares a deforested Quantum State Stream directly from a Ternary truth function.
+public export
+streamQuantumStateFromTernaryFn : (totalStates : Nat) -> (Nat -> Nat) -> FusedStream QuantumStateToken
+streamQuantumStateFromTernaryFn totalStates f =
+  MkStream nextStep 0
+    where
+      nextStep : Nat -> Step Nat QuantumStateToken
+      nextStep idx =
+        if idx >= totalStates
+          then Done
+          else let tritVal = f idx
+                   basis = if tritVal > 0 then OneState else ZeroState
+                   tok = MkQuantumToken basis (intToBoxInt 1)
+               in Yield tok (S idx)
+
+||| Audits deforested Boolean truth table quantum state preparation and expectation value.
+public export
+auditBooleQuantumStatePreparationProof : Bool
+auditBooleQuantumStatePreparationProof =
+  let strm = streamQuantumStateFromBoolFn 4 (\i => (cast {to = Integer} i `mod` 2) /= 0)
+      expVal = fusedExpectationValueStreamNat 10 strm
+  in unwrapBox expVal == 4
+
+
 
