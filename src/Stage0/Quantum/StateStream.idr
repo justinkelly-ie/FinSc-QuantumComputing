@@ -43,23 +43,35 @@ unfoldQuantumStateStream items = MkStream nextStep items
     nextStep [] = Done
     nextStep ((b, amp) :: rest) = Yield (MkQuantumToken b amp) rest
 
+||| Computes measurement expectation value directly across a QuantumStateToken stream using fueled fold.
+public export
+fusedExpectationValueStream : Fuel -> FusedStream QuantumStateToken -> BoxInt
+fusedExpectationValueStream f strm =
+  foldStreamFuel f
+    (\acc, tok => addBox (mulBox (amplitude tok) (amplitude tok)) acc)
+    (intToBoxInt 0)
+    strm
+
+||| Total Nat fuel-bounded expectation value directly across a QuantumStateToken stream.
+public export
+fusedExpectationValueStreamNat : (fuel : Nat) -> FusedStream QuantumStateToken -> BoxInt
+fusedExpectationValueStreamNat fuel strm =
+  foldStreamNat fuel
+    (\acc, tok => addBox (mulBox (amplitude tok) (amplitude tok)) acc)
+    (intToBoxInt 0)
+    strm
+
 ||| Computes measurement expectation value \langle \psi | A | \psi \rangle across a stream using fueled fold.
 public export
 fusedExpectationValue : Fuel -> List (QubitBasis, BoxInt) -> BoxInt
 fusedExpectationValue f items =
-  foldStreamFuel f
-    (\acc, tok => (amplitude tok * amplitude tok) + acc)
-    (intToBoxInt 0)
-    (unfoldQuantumStateStream items)
+  fusedExpectationValueStream f (unfoldQuantumStateStream items)
 
 ||| Total Nat fuel-bounded expectation value.
 public export
 fusedExpectationValueNat : (fuel : Nat) -> List (QubitBasis, BoxInt) -> BoxInt
 fusedExpectationValueNat fuel items =
-  foldStreamNat fuel
-    (\acc, tok => (amplitude tok * amplitude tok) + acc)
-    (intToBoxInt 0)
-    (unfoldQuantumStateStream items)
+  fusedExpectationValueStreamNat fuel (unfoldQuantumStateStream items)
 
 --------------------------------------------------------------------------------
 -- 2. VERIFICATION AUDIT WITNESS
