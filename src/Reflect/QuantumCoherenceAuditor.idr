@@ -5,6 +5,7 @@
 module Reflect.QuantumCoherenceAuditor
 
 import Stage0.BoxInt
+import Stage0.Quantum.StateStream
 import Language.Reflection
 
 %default total
@@ -76,6 +77,21 @@ public export
 auditToricStabilizerCommutativity : Elab (Reflect.QuantumCoherenceAuditor.auditToricStabilizerCommutativityProof = True)
 auditToricStabilizerCommutativity = pure Refl
 
+public export
+auditWitness : (target : Bool) -> Elab (target = True)
+auditWitness True = pure Refl
+auditWitness False = fail "Quantum coherence auditor check failed: proof export returned False"
+
+||| Audit 5: Streaming Lindblad Open-System Trace Preservation (Tr(rho) = 1).
+public export
+auditStreamingLindbladTraceProofExport : Bool
+auditStreamingLindbladTraceProofExport = Stage0.Quantum.StateStream.auditStreamingLindbladTraceProof
+
+public export
+%macro
+auditStreamingLindbladTrace : Elab (Reflect.QuantumCoherenceAuditor.auditStreamingLindbladTraceProofExport = True)
+auditStreamingLindbladTrace = auditWitness Reflect.QuantumCoherenceAuditor.auditStreamingLindbladTraceProofExport
+
 ||| Batch quantum coherence auditor witnesses.
 public export
 quantumCoherenceAuditorWitnesses : List Bool
@@ -84,4 +100,6 @@ quantumCoherenceAuditorWitnesses =
   , auditMaximalMixedTraceProof
   , auditHadamardUnitarityProof
   , auditToricStabilizerCommutativityProof
+  , auditStreamingLindbladTraceProofExport
   ]
+

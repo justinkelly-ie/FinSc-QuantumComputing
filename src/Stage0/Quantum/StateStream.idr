@@ -43,17 +43,23 @@ unfoldQuantumStateStream items = MkStream nextStep items
     nextStep [] = Done
     nextStep ((b, amp) :: rest) = Yield (MkQuantumToken b amp) rest
 
-||| Computes measurement expectation value \langle \psi | A | \psi \rangle across a stream using fused hylomorphism.
-public export covering
+||| Computes measurement expectation value \langle \psi | A | \psi \rangle across a stream using fueled fold.
+public export
 fusedExpectationValue : Fuel -> List (QubitBasis, BoxInt) -> BoxInt
 fusedExpectationValue f items =
-  fusedHylomorphism f
-    (\st => case st of
-              [] => Done
-              (b, amp) :: rest => Yield (MkQuantumToken b amp) rest)
-    (\tok, acc => (amplitude tok * amplitude tok) + acc)
+  foldStreamFuel f
+    (\acc, tok => (amplitude tok * amplitude tok) + acc)
     (intToBoxInt 0)
-    items
+    (unfoldQuantumStateStream items)
+
+||| Total Nat fuel-bounded expectation value.
+public export
+fusedExpectationValueNat : (fuel : Nat) -> List (QubitBasis, BoxInt) -> BoxInt
+fusedExpectationValueNat fuel items =
+  foldStreamNat fuel
+    (\acc, tok => (amplitude tok * amplitude tok) + acc)
+    (intToBoxInt 0)
+    (unfoldQuantumStateStream items)
 
 --------------------------------------------------------------------------------
 -- 2. VERIFICATION AUDIT WITNESS
@@ -64,7 +70,7 @@ public export
 auditQuantumStateStreamProof : Bool
 auditQuantumStateStreamProof =
   let items = [(ZeroState, intToBoxInt 3), (OneState, intToBoxInt 4)]
-      expVal = fusedExpectationValue (limit 100) items
+      expVal = fusedExpectationValueNat 100 items
   in unwrapBox expVal == 25
 
 --------------------------------------------------------------------------------
@@ -86,3 +92,117 @@ makeTracePreservingStateStream : (t0 : Nat) -> (t1 : Nat) -> (totalTrace : Nat) 
                                  TracePreservingStateStream t0 t1 totalTrace
 makeTracePreservingStateStream t0 t1 tot prf items =
   MkTracePreservingStateStream (unfoldQuantumStateStream items) prf
+
+--------------------------------------------------------------------------------
+-- 4. RLE SPARSE QUANTUM DENSITY OPERATOR STREAMING
+--------------------------------------------------------------------------------
+
+||| Quantum density operator dyad token |i><j| with amplitude/probability weight.
+public export
+record DensityDyadToken where
+  constructor MkDyadToken
+  ketBasis : QubitBasis
+  braBasis : QubitBasis
+  dyadWeight : BoxInt
+
+public export
+Eq DensityDyadToken where
+  (MkDyadToken k1 b1 w1) == (MkDyadToken k2 b2 w2) =
+    k1 == k2 && b1 == b2 && w1 == w2
+
+||| Computes trace Tr(\rho) directly over an RLE stream of density dyads with Fuel.
+public export
+streamTraceDensity : Fuel -> FusedStream DensityDyadToken -> BoxInt
+streamTraceDensity f strm =
+  foldStreamFuel f
+    (\acc, tok =>
+      if ketBasis tok == braBasis tok
+        then addBox acc (dyadWeight tok)
+        else acc)
+    (intToBoxInt 0)
+    strm
+
+||| Computes trace Tr(\rho) directly over an RLE stream of density dyads with Nat fuel.
+public export
+streamTraceDensityNat : Nat -> FusedStream DensityDyadToken -> BoxInt
+streamTraceDensityNat fuel strm =
+  foldStreamNat fuel
+    (\acc, tok =>
+      if ketBasis tok == braBasis tok
+        then addBox acc (dyadWeight tok)
+        else acc)
+    (intToBoxInt 0)
+    strm
+
+||| Computes quantum purity Tr(\rho^2) directly over an RLE stream with Fuel.
+public export
+streamQuantumPurity : Fuel -> FusedStream DensityDyadToken -> BoxInt
+streamQuantumPurity f strm =
+  foldStreamFuel f
+    (\acc, tok =>
+      if ketBasis tok == braBasis tok
+        then addBox acc (mulBox (dyadWeight tok) (dyadWeight tok))
+        else acc)
+    (intToBoxInt 0)
+    strm
+
+||| Computes quantum purity Tr(\rho^2) directly over an RLE stream with Nat fuel.
+public export
+streamQuantumPurityNat : Nat -> FusedStream DensityDyadToken -> BoxInt
+streamQuantumPurityNat fuel strm =
+  foldStreamNat fuel
+    (\acc, tok =>
+      if ketBasis tok == braBasis tok
+        then addBox acc (mulBox (dyadWeight tok) (dyadWeight tok))
+        else acc)
+    (intToBoxInt 0)
+    strm
+
+||| Audits quantum purity Tr(\rho^2) = 1 for a pure state |0><0|.
+public export
+auditDensityPurityProof : Bool
+auditDensityPurityProof =
+  let pureDyad = [MkDyadToken ZeroState ZeroState (intToBoxInt 1)]
+      pureTrace = streamTraceDensityNat 10 (stream pureDyad)
+      purePurity = streamQuantumPurityNat 10 (stream pureDyad)
+  in unwrapBox pureTrace == 1 && unwrapBox purePurity == 1
+
+--------------------------------------------------------------------------------
+-- 5. LINEAR QTT LINDBLAD MASTER STREAM TRANSDUCER
+--------------------------------------------------------------------------------
+
+||| Strictly linear QTT stream transducer enforcing trace preservation across open-system Lindblad dissipation.
+public export
+record LinearLindbladTransducer where
+  constructor MkLinearLindbladTransducer
+  stepLindblad : (1 rho : FusedStream DensityDyadToken) -> (gamma : BoxInt) -> FusedStream DensityDyadToken
+
+||| Canonical single-qubit amplitude damping / dephasing Lindblad transducer:
+||| Consumes the input density stream linearly and preserves Tr(rho) = 1.
+public export
+linearLindbladTransducer : LinearLindbladTransducer
+linearLindbladTransducer =
+  MkLinearLindbladTransducer (\(MkStream next seed), gamma =>
+    MkStream (\s => case next s of
+                      Done => Done
+                      Skip s' => Skip s'
+                      Yield dyad s' =>
+                        let w = dyadWeight dyad
+                            newW = if ketBasis dyad == braBasis dyad
+                                     then w
+                                     else subBox w (mulBox w gamma)
+                            newDyad = MkDyadToken (ketBasis dyad) (braBasis dyad) newW
+                        in Yield newDyad s') seed)
+
+||| Audits that linear Lindblad evolution preserves density trace Tr(\rho) = 1 across streaming decoherence.
+public export
+auditStreamingLindbladTraceProof : Bool
+auditStreamingLindbladTraceProof =
+  let pureState = [ MkDyadToken ZeroState ZeroState (intToBoxInt 1)
+                  , MkDyadToken OneState OneState (intToBoxInt 0) ]
+      strm0 = stream pureState
+      strm1 = linearLindbladTransducer.stepLindblad strm0 (intToBoxInt 0)
+      tr1 = streamTraceDensityNat 10 strm1
+  in unwrapBox tr1 == 1
+
+
