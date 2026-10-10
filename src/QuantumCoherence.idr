@@ -2,6 +2,7 @@ module QuantumCoherence
 
 import public Stage1.Dihedron
 import public Stage0.Quantum.Circuit
+import public Stage0.Quantum.Clifford
 import public Stage0.Quantum.DeutschJozsa
 import public Stage0.Quantum.QuantumScaleTransforms
 import public Stage0.Quantum.Qubit
