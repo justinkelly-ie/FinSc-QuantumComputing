@@ -3,6 +3,7 @@ module Stage0.Quantum.Clifford
 import Stage0.BoxInt
 import Stage1.MultisetTree
 import Stage0.OnSeq.FusedStream
+import Stage0.StructuralFuel
 import Data.Fuel
 import Data.List
 
@@ -203,6 +204,17 @@ fusedRunCliffordCircuit : Fuel -> List CliffordGate -> StabilizerTableau -> Stab
 fusedRunCliffordCircuit f gates initTab =
   foldStreamFuel f (\_, nextTab => nextTab) initTab (streamCliffordCircuit gates initTab)
 
+||| Evaluates a Nat-step bounded Clifford circuit execution using stream left fold.
+public export
+fusedRunCliffordCircuitNat : (steps : Nat) -> List CliffordGate -> StabilizerTableau -> StabilizerTableau
+fusedRunCliffordCircuitNat steps gates initTab =
+  foldStreamNat steps (\acc, nextTab => nextTab) initTab (streamCliffordCircuit gates initTab)
+
+||| Evaluates a model-indexed GohFuel Clifford circuit execution using stream left fold.
+public export
+fusedRunCliffordCircuitFuelModel : GohFuel cap -> List CliffordGate -> StabilizerTableau -> StabilizerTableau
+fusedRunCliffordCircuitFuelModel fuel = fusedRunCliffordCircuitNat (gohSteps fuel)
+
 ------------------------------------------------------------------------
 -- 5. BALANCED MULTISET-TREE QUANTUM AMPLITUDE CARRIER (O(log N))
 ------------------------------------------------------------------------
@@ -259,7 +271,7 @@ auditCliffordBellStabilizerProof : Bool
 auditCliffordBellStabilizerProof =
   let initTab = MkTableau 2 [ MkStabGen True [PauliZ, PauliI]
                             , MkStabGen True [PauliI, PauliZ] ]
-      bellTab = fusedRunCliffordCircuit (limit 5) [GateH 0, GateCNOT 0 1] initTab
+      bellTab = fusedRunCliffordCircuitFuelModel ellipticGohFuelModel [GateH 0, GateCNOT 0 1] initTab
       expected = MkTableau 2 [ MkStabGen True [PauliX, PauliX]
                              , MkStabGen True [PauliZ, PauliZ] ]
   in bellTab == expected
