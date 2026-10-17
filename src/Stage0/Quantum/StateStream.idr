@@ -5,6 +5,7 @@ import public Stage1.Order.Preorder
 import public Stage0.OnSeq.FusedStream
 import public Stage0.Quantum.Qubit
 import public Stage0.Quantum.Circuit
+import Stage0.StructuralFuel
 import Data.Fuel
 
 %default total
@@ -73,6 +74,12 @@ fusedExpectationValueNat : (fuel : Nat) -> List (QubitBasis, BoxInt) -> BoxInt
 fusedExpectationValueNat fuel items =
   fusedExpectationValueStreamNat fuel (unfoldQuantumStateStream items)
 
+||| Total expectation value bounded by model-indexed GohFuel.
+public export
+fusedExpectationValueFuelModel : GohFuel cap -> List (QubitBasis, BoxInt) -> BoxInt
+fusedExpectationValueFuelModel fuel items =
+  fusedExpectationValueNat (gohSteps fuel) items
+
 --------------------------------------------------------------------------------
 -- 2. VERIFICATION AUDIT WITNESS
 --------------------------------------------------------------------------------
@@ -82,7 +89,7 @@ public export
 auditQuantumStateStreamProof : Bool
 auditQuantumStateStreamProof =
   let items = [(ZeroState, intToBoxInt 3), (OneState, intToBoxInt 4)]
-      expVal = fusedExpectationValueNat 100 items
+      expVal = fusedExpectationValueFuelModel ellipticGohFuelModel items
   in unwrapBox expVal == 25
 
 --------------------------------------------------------------------------------
