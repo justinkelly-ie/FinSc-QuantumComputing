@@ -555,6 +555,100 @@ auditFredkinSparseInvolution =
   identityBoxSquareMaxel 8
 
 ------------------------------------------------------------------------
+-- 4B. COMPOSITIONAL SPARSE MULTI-QUBIT KRONECKER GATE SYNTHESIS
+------------------------------------------------------------------------
+
+||| Single-qubit identity gate as a sparse BoxSquareMaxel 2.
+public export
+qubitIdBoxSquareMaxel : BoxSquareMaxel 2
+qubitIdBoxSquareMaxel = identityBoxSquareMaxel 2
+
+||| Single-qubit Pauli-X (NOT) gate as a sparse BoxSquareMaxel 2: [[0, 1], [1, 0]].
+public export
+pauliXBoxSquareMaxel : BoxSquareMaxel 2
+pauliXBoxSquareMaxel = maxelNToBoxSquareMaxel pauliXMaxel
+
+||| Single-qubit Pauli-Z (Phase Flip) gate as a sparse BoxSquareMaxel 2: [[1, 0], [0, -1]].
+public export
+pauliZBoxSquareMaxel : BoxSquareMaxel 2
+pauliZBoxSquareMaxel = maxelNToBoxSquareMaxel pauliZMaxel
+
+||| Single-qubit unscaled Hadamard gate as a sparse BoxSquareMaxel 2: [[1, 1], [1, -1]].
+public export
+hadamardBoxSquareMaxel : BoxSquareMaxel 2
+hadamardBoxSquareMaxel = maxelNToBoxSquareMaxel hadamardUnscaledMaxel
+
+||| Parallel multi-qubit gate tensor product via sparse Kronecker composition:
+||| Computes A ⊗ B in O(K1 * K2 log(m * n)) over active non-zero support only.
+public export
+gateTensorBoxSquare : {m, n : Nat} -> BoxSquareMaxel m -> BoxSquareMaxel n -> BoxSquareMaxel (m * n)
+gateTensorBoxSquare = kroneckerBoxSquareMaxel
+
+||| 2LTT Staged parallel multi-qubit gate tensor product.
+public export
+stagedGateTensorBoxSquare : {m, n : Nat} -> Lift (BoxSquareMaxel m) -> Lift (BoxSquareMaxel n) -> Code (BoxSquareMaxel (m * n))
+stagedGateTensorBoxSquare = stagedKroneckerBoxSquareMaxel
+
+||| 2-Qubit Pauli-X ⊗ Pauli-X operator as a sparse BoxSquareMaxel 4.
+public export
+pauliXXBoxSquareMaxel : BoxSquareMaxel 4
+pauliXXBoxSquareMaxel = kroneckerBoxSquareMaxel pauliXBoxSquareMaxel pauliXBoxSquareMaxel
+
+||| 2-Qubit Pauli-Z ⊗ Pauli-Z operator as a sparse BoxSquareMaxel 4.
+public export
+pauliZZBoxSquareMaxel : BoxSquareMaxel 4
+pauliZZBoxSquareMaxel = kroneckerBoxSquareMaxel pauliZBoxSquareMaxel pauliZBoxSquareMaxel
+
+||| 2-Qubit Pauli-X ⊗ I_2 operator as a sparse BoxSquareMaxel 4.
+public export
+pauliXIBoxSquareMaxel : BoxSquareMaxel 4
+pauliXIBoxSquareMaxel = kroneckerBoxSquareMaxel pauliXBoxSquareMaxel qubitIdBoxSquareMaxel
+
+||| 2-Qubit I_2 ⊗ Pauli-X operator as a sparse BoxSquareMaxel 4.
+public export
+pauliIXBoxSquareMaxel : BoxSquareMaxel 4
+pauliIXBoxSquareMaxel = kroneckerBoxSquareMaxel qubitIdBoxSquareMaxel pauliXBoxSquareMaxel
+
+||| 2-Qubit Hadamard H ⊗ H operator as a sparse BoxSquareMaxel 4.
+public export
+hadamard2QubitBoxSquareMaxel : BoxSquareMaxel 4
+hadamard2QubitBoxSquareMaxel = kroneckerBoxSquareMaxel hadamardBoxSquareMaxel hadamardBoxSquareMaxel
+
+||| 3-Qubit Hadamard H ⊗ H ⊗ H operator as a sparse BoxSquareMaxel 8.
+public export
+hadamard3QubitBoxSquareMaxel : BoxSquareMaxel 8
+hadamard3QubitBoxSquareMaxel = kroneckerBoxSquareMaxel hadamard2QubitBoxSquareMaxel hadamardBoxSquareMaxel
+
+||| Verified Invariant: Kronecker tensor product of identity matrices yields the composite identity:
+||| I_2 ⊗ I_2 = I_4.
+public export
+auditKroneckerIdentity2x2 : Bool
+auditKroneckerIdentity2x2 =
+  kroneckerBoxSquareMaxel (identityBoxSquareMaxel 2) (identityBoxSquareMaxel 2) == identityBoxSquareMaxel 4
+
+||| Verified Invariant: 2-qubit Pauli-X ⊗ Pauli-X is self-inverse: (X ⊗ X)^2 = I_4.
+public export
+auditPauliXXInvolution : Bool
+auditPauliXXInvolution =
+  splice (stagedComposeBoxSquareMaxel (quote pauliXXBoxSquareMaxel) (quote pauliXXBoxSquareMaxel)) ==
+  identityBoxSquareMaxel 4
+
+||| Verified Invariant: 2-qubit Pauli-Z ⊗ Pauli-Z is self-inverse: (Z ⊗ Z)^2 = I_4.
+public export
+auditPauliZZInvolution : Bool
+auditPauliZZInvolution =
+  splice (stagedComposeBoxSquareMaxel (quote pauliZZBoxSquareMaxel) (quote pauliZZBoxSquareMaxel)) ==
+  identityBoxSquareMaxel 4
+
+||| Verified Invariant: 2-qubit Pauli-X ⊗ I_2 is self-inverse: (X ⊗ I_2)^2 = I_4.
+public export
+auditPauliXIInvolution : Bool
+auditPauliXIInvolution =
+  splice (stagedComposeBoxSquareMaxel (quote pauliXIBoxSquareMaxel) (quote pauliXIBoxSquareMaxel)) ==
+  identityBoxSquareMaxel 4
+
+
+------------------------------------------------------------------------
 -- 5. MINKOWSKI DIHEDRON QUANTUM GATE BRIDGE (PHASE 4)
 -- Maps 2x2 Minkowski Dihedron matrices directly to Pauli quantum gates.
 ------------------------------------------------------------------------
