@@ -1,6 +1,7 @@
 module Stage0.Quantum.StateStream
 
 import public Stage0.BoxInt
+import public Stage0.BoxNat
 import public Stage1.Order.Preorder
 import public Stage0.OnSeq.FusedStream
 import public Stage0.Quantum.Qubit
@@ -292,7 +293,7 @@ streamQuantumStateFromTernaryFn totalStates f =
 public export
 auditBooleQuantumStatePreparationProof : Bool
 auditBooleQuantumStatePreparationProof =
-  let strm = streamQuantumStateFromBoolFn 4 (\i => (cast {to = Integer} i `mod` 2) /= 0)
+  let strm = streamQuantumStateFromBoolFn 4 (\i => snd (natHalfAndOdd i))
       expVal = fusedExpectationValueStreamNat 10 strm
   in unwrapBox expVal == 4
 
