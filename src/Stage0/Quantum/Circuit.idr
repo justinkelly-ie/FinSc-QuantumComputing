@@ -416,4 +416,79 @@ auditBellStateCircuit =
   splice (stagedBellState (mkVexel4 (intToBoxInt 1) (intToBoxInt 0) (intToBoxInt 0) (intToBoxInt 0))) ==
   mkVexel4 (intToBoxInt 1) (intToBoxInt 0) (intToBoxInt 0) (intToBoxInt 1)
 
+------------------------------------------------------------------------
+-- MULTI-QUBIT GATES & GENERALIZED STAGED CIRCUIT COMPILER (N = 2^k)
+------------------------------------------------------------------------
+
+||| Generalized 2LTT staged quantum gate application for arbitrary n-dimensional registers:
+public export
+stagedApplyGateN : {n : Nat} -> Lift (MaxelN n) -> VexelN n -> Code (VexelN n)
+stagedApplyGateN = stagedMaxelNVec
+
+||| Generalized 2LTT staged quantum gate composition for arbitrary n-dimensional gates:
+public export
+stagedComposeGatesN : {n : Nat} -> Lift (MaxelN n) -> Lift (MaxelN n) -> Code (MaxelN n)
+stagedComposeGatesN = stagedMaxelNMul
+
+||| 8-Dimensional Identity Gate: I_8.
+public export
+qubitId8Maxel : MaxelN 8
+qubitId8Maxel = stagedIdentityMaxelN 8
+
+||| 3-Qubit Toffoli (Controlled-Controlled-NOT) Gate Matrix:
+||| Flips the target qubit (qubit 2) iff control qubits 0 and 1 are in state |11>.
+public export
+toffoliMat : Vect 8 (Vect 8 BoxInt)
+toffoliMat =
+  [[intToBoxInt 1, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0],
+   [intToBoxInt 0, intToBoxInt 1, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0],
+   [intToBoxInt 0, intToBoxInt 0, intToBoxInt 1, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0],
+   [intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 1, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0],
+   [intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 1, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0],
+   [intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 1, intToBoxInt 0, intToBoxInt 0],
+   [intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 1],
+   [intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 1, intToBoxInt 0]]
+
+||| 3-Qubit Toffoli (CCNOT) Gate as MaxelN 8.
+public export
+toffoliMaxel : MaxelN 8
+toffoliMaxel = MkMaxelN toffoliMat
+
+||| 3-Qubit Fredkin (Controlled-SWAP) Gate Matrix:
+||| Swaps target qubits 1 and 2 iff control qubit 0 is in state |1>.
+public export
+fredkinMat : Vect 8 (Vect 8 BoxInt)
+fredkinMat =
+  [[intToBoxInt 1, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0],
+   [intToBoxInt 0, intToBoxInt 1, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0],
+   [intToBoxInt 0, intToBoxInt 0, intToBoxInt 1, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0],
+   [intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 1, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0],
+   [intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 1, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0],
+   [intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 1, intToBoxInt 0],
+   [intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 1, intToBoxInt 0, intToBoxInt 0],
+   [intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 1]]
+
+||| 3-Qubit Fredkin (CSWAP) Gate as MaxelN 8.
+public export
+fredkinMaxel : MaxelN 8
+fredkinMaxel = MkMaxelN fredkinMat
+
+||| 3-Qubit Hadamard Tensor Product H ⊗ H ⊗ H as MaxelN 8.
+public export
+hadamard3QubitMaxel : MaxelN 8
+hadamard3QubitMaxel = kroneckerMaxelN (kroneckerMaxelN hadamardUnscaledMaxel hadamardUnscaledMaxel) hadamardUnscaledMaxel
+
+||| Verified Invariant: Staged Toffoli gate is self-inverse (Toffoli^2 = I_8).
+public export
+auditToffoliGateInvolution : Bool
+auditToffoliGateInvolution =
+  splice (stagedComposeGatesN (quote toffoliMaxel) (quote toffoliMaxel)) == qubitId8Maxel
+
+||| Verified Invariant: Staged Fredkin gate is self-inverse (Fredkin^2 = I_8).
+public export
+auditFredkinGateInvolution : Bool
+auditFredkinGateInvolution =
+  splice (stagedComposeGatesN (quote fredkinMaxel) (quote fredkinMaxel)) == qubitId8Maxel
+
+
 
