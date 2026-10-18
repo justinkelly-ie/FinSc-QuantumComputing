@@ -12,6 +12,7 @@ import Stage1.MultisetDuality
 import Stage1.MaxelTransform
 import Stage1.MultisetTensor
 import Stage1.TypeTheory.Staging
+import Stage1.DihedronModel as DM
 import Data.Vect
 
 %default total
@@ -489,6 +490,45 @@ public export
 auditFredkinGateInvolution : Bool
 auditFredkinGateInvolution =
   splice (stagedComposeGatesN (quote fredkinMaxel) (quote fredkinMaxel)) == qubitId8Maxel
+
+------------------------------------------------------------------------
+-- 5. MINKOWSKI DIHEDRON QUANTUM GATE BRIDGE (PHASE 4)
+-- Maps 2x2 Minkowski Dihedron matrices directly to Pauli quantum gates.
+------------------------------------------------------------------------
+
+||| Maps a 2x2 Minkowski Dihedron directly to a dimension-indexed MaxelN 2 quantum gate.
+public export
+dihedronToMaxelN2 : DM.Dihedron2 -> MaxelN 2
+dihedronToMaxelN2 (DM.MkDihedron2 d00 d01 d10 d11) =
+  mkMaxel2 d00 d01 d10 d11
+
+||| Pauli-I Dihedron Gate: D(1; 0, 0, 0).
+public export
+pauliIDihedron : DM.Dihedron2
+pauliIDihedron = DM.fromProportionMink 1 0 0 0
+
+||| Pauli-X (NOT) Dihedron Gate: D(0; 0, 1, 0).
+public export
+pauliXDihedron : DM.Dihedron2
+pauliXDihedron = DM.fromProportionMink 0 0 1 0
+
+||| Pauli-Z (Phase-Flip) Dihedron Gate: D(0; 0, 0, 1).
+public export
+pauliZDihedron : DM.Dihedron2
+pauliZDihedron = DM.fromProportionMink 0 0 0 1
+
+||| Symplectic J Dihedron Gate: D(0; 1, 0, 0).
+public export
+pauliJDihedron : DM.Dihedron2
+pauliJDihedron = DM.fromProportionMink 0 1 0 0
+
+||| Verified Invariant: Dihedron representation maps identically to standard Pauli-X and Pauli-Z gates.
+public export
+auditDihedronPauliGateBridge : Bool
+auditDihedronPauliGateBridge =
+  (dihedronToMaxelN2 pauliXDihedron == pauliXMaxel) &&
+  (dihedronToMaxelN2 pauliZDihedron == pauliZMaxel) &&
+  (dihedronToMaxelN2 pauliIDihedron == qubitId2Maxel)
 
 
 
