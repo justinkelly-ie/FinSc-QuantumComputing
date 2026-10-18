@@ -13,6 +13,7 @@ import Stage1.MaxelTransform
 import Stage1.MultisetTensor
 import Stage1.TypeTheory.Staging
 import Stage1.DihedronModel as DM
+import Stage0.OnSeq.FusedStream as FS
 import Data.Vect
 
 %default total
@@ -32,14 +33,14 @@ TracePreservingChannel t0 t1 totalTrace = natAdd t0 t1 = totalTrace
 public export
 record CPTPQuantumChannel (t0 : Nat) (t1 : Nat) (totalTrace : Nat) where
   constructor MkCPTPQuantumChannel
-  channelMatrix : Maxel
+  channelMatrix : Stage1.VexelMaxel.Maxel
   0 tracePrf    : TracePreservingChannel t0 t1 totalTrace
 
 ||| Constructs a validated CPTP quantum channel with an erased compile-time trace preservation proof.
 public export
 makeCPTPChannel : (t0 : Nat) -> (t1 : Nat) -> (totalTrace : Nat) ->
                   (0 prf : TracePreservingChannel t0 t1 totalTrace) ->
-                  Maxel ->
+                  Stage1.VexelMaxel.Maxel ->
                   CPTPQuantumChannel t0 t1 totalTrace
 makeCPTPChannel t0 t1 tot prf mat = MkCPTPQuantumChannel mat prf
 
@@ -530,5 +531,45 @@ auditDihedronPauliGateBridge =
   (dihedronToMaxelN2 pauliZDihedron == pauliZMaxel) &&
   (dihedronToMaxelN2 pauliIDihedron == qubitId2Maxel)
 
+------------------------------------------------------------------------
+-- 6. 2LTT STAGED QUANTUM CIRCUIT COMPILER & REDUCTION (PHASE 3)
+------------------------------------------------------------------------
 
+||| Symbolically reduces adjacent self-inverse gates (e.g. X * X = I, Z * Z = I) at Level 1.
+public export
+simplifyGatePairs : List DM.Dihedron2 -> List DM.Dihedron2
+simplifyGatePairs [] = []
+simplifyGatePairs (g :: []) = [g]
+simplifyGatePairs (g1 :: g2 :: rest) =
+  let prod = DM.mulDihedron2 g1 g2
+  in if prod == DM.identityDihedron2
+       then simplifyGatePairs rest
+       else g1 :: simplifyGatePairs (g2 :: rest)
 
+||| 2LTT Staged Circuit Compiler:
+||| Folds a StagedStream of Dihedron2 quantum gates at compile time (Level 1)
+||| into a single compiled Level 0 runtime MaxelN 2 matrix with zero execution overhead.
+public export
+stagedCompileCircuit : (fuel : Nat) -> StagedStream DM.Dihedron2 -> Code (MaxelN 2)
+stagedCompileCircuit fuel strm =
+  let finalD = stagedFoldStream fuel DM.mulDihedron2 DM.identityDihedron2 strm
+  in quote (dihedronToMaxelN2 finalD)
+
+||| Staged circuit compilation with symbolic Level 1 pair cancellation.
+public export
+stagedCompileOptimizedCircuit : (fuel : Nat) -> List DM.Dihedron2 -> Code (MaxelN 2)
+stagedCompileOptimizedCircuit fuel gates =
+  let simplified = simplifyGatePairs gates
+      stStream   = quoteFusedStream (FS.stream simplified)
+  in stagedCompileCircuit fuel stStream
+
+||| Audit: Staged circuit compiler cancels a 10-gate sequence [X, X, X, X, X, X, X, X, X, X]
+||| to the exact identity gate I_2 at compile time.
+public export
+auditStagedCircuitReductionProof : Bool
+auditStagedCircuitReductionProof =
+  let tenXs = [pauliXDihedron, pauliXDihedron, pauliXDihedron, pauliXDihedron, pauliXDihedron,
+               pauliXDihedron, pauliXDihedron, pauliXDihedron, pauliXDihedron, pauliXDihedron]
+      compiledCode = stagedCompileOptimizedCircuit 20 tenXs
+      compiledMaxel = splice compiledCode
+  in compiledMaxel == qubitId2Maxel
