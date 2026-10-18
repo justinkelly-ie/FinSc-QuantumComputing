@@ -7,6 +7,7 @@ import Stage0.BoxInt
 import Stage0.WitnessLedger
 import Stage1.Order.Preorder
 import Stage1.VexelMaxel
+import Stage1.MultisetTree
 import Stage1.UnixelFraction
 import Stage1.MultisetDuality
 import Stage1.MaxelTransform
@@ -375,6 +376,41 @@ auditSWAPInvolution : Bool
 auditSWAPInvolution =
   splice (stagedComposeGates4x4 (quote swapMaxel) (quote swapMaxel)) == qubitId4Maxel
 
+||| 2-Qubit Controlled-NOT (CNOT) Gate as a sparse BoxSquareMaxel 4:
+||| Supported on exactly 4 active non-zero pixels out of 16 matrix elements (75% sparse).
+public export
+cnotBoxSquareMaxel : BoxSquareMaxel 4
+cnotBoxSquareMaxel = maxelNToBoxSquareMaxel cnotMaxel
+
+||| 2-Qubit SWAP Gate as a sparse BoxSquareMaxel 4:
+||| Supported on exactly 4 active non-zero pixels out of 16 matrix elements (75% sparse).
+public export
+swapBoxSquareMaxel : BoxSquareMaxel 4
+swapBoxSquareMaxel = maxelNToBoxSquareMaxel swapMaxel
+
+||| Verified Invariant: Staged CNOT sparse gate is self-inverse (CNOT^2 = I_4).
+public export
+auditCNOTSparseInvolution : Bool
+auditCNOTSparseInvolution =
+  splice (stagedComposeBoxSquareMaxel (quote cnotBoxSquareMaxel) (quote cnotBoxSquareMaxel)) ==
+  identityBoxSquareMaxel 4
+
+||| Verified Invariant: Staged SWAP sparse gate is self-inverse (SWAP^2 = I_4).
+public export
+auditSWAPSparseInvolution : Bool
+auditSWAPSparseInvolution =
+  splice (stagedComposeBoxSquareMaxel (quote swapBoxSquareMaxel) (quote swapBoxSquareMaxel)) ==
+  identityBoxSquareMaxel 4
+
+||| Verified Invariant: Applying sparse CNOT to basis state |10> = [0, 0, 1, 0] produces |11> = [0, 0, 0, 1].
+public export
+auditCNOTSparseStateContraction : Bool
+auditCNOTSparseStateContraction =
+  let inV = mkVexel4 (intToBoxInt 0) (intToBoxInt 0) (intToBoxInt 1) (intToBoxInt 0)
+      outV = splice (stagedContractBoxSquareDense (quote cnotBoxSquareMaxel) inV)
+      expected = mkVexel4 (intToBoxInt 0) (intToBoxInt 0) (intToBoxInt 0) (intToBoxInt 1)
+  in outV == expected
+
 ||| Exact Kronecker tensor product of two 2x2 matrices into a 4x4 matrix: A ⊗ B.
 public export
 kronecker2x2 : Vect 2 (Vect 2 BoxInt) -> Vect 2 (Vect 2 BoxInt) -> Vect 4 (Vect 4 BoxInt)
@@ -491,6 +527,32 @@ public export
 auditFredkinGateInvolution : Bool
 auditFredkinGateInvolution =
   splice (stagedComposeGatesN (quote fredkinMaxel) (quote fredkinMaxel)) == qubitId8Maxel
+
+||| 3-Qubit Toffoli (CCNOT) Gate as a sparse BoxSquareMaxel 8:
+||| Supported on exactly 8 active non-zero pixels out of 64 matrix elements (87.5% sparse).
+public export
+toffoliBoxSquareMaxel : BoxSquareMaxel 8
+toffoliBoxSquareMaxel = maxelNToBoxSquareMaxel toffoliMaxel
+
+||| 3-Qubit Fredkin (CSWAP) Gate as a sparse BoxSquareMaxel 8:
+||| Supported on exactly 8 active non-zero pixels out of 64 matrix elements (87.5% sparse).
+public export
+fredkinBoxSquareMaxel : BoxSquareMaxel 8
+fredkinBoxSquareMaxel = maxelNToBoxSquareMaxel fredkinMaxel
+
+||| Verified Invariant: Staged Toffoli sparse gate is self-inverse (Toffoli^2 = I_8).
+public export
+auditToffoliSparseInvolution : Bool
+auditToffoliSparseInvolution =
+  splice (stagedComposeBoxSquareMaxel (quote toffoliBoxSquareMaxel) (quote toffoliBoxSquareMaxel)) ==
+  identityBoxSquareMaxel 8
+
+||| Verified Invariant: Staged Fredkin sparse gate is self-inverse (Fredkin^2 = I_8).
+public export
+auditFredkinSparseInvolution : Bool
+auditFredkinSparseInvolution =
+  splice (stagedComposeBoxSquareMaxel (quote fredkinBoxSquareMaxel) (quote fredkinBoxSquareMaxel)) ==
+  identityBoxSquareMaxel 8
 
 ------------------------------------------------------------------------
 -- 5. MINKOWSKI DIHEDRON QUANTUM GATE BRIDGE (PHASE 4)
