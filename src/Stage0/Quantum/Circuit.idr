@@ -10,9 +10,8 @@ import Stage1.VexelMaxel
 import Stage1.UnixelFraction
 import Stage1.MultisetDuality
 import Stage1.MaxelTransform
-import Stage1.TypeTheory.Staging
-import Stage1.TypeTheory.TwoLevel
 import Stage1.MultisetTensor
+import Stage1.TypeTheory.Staging
 
 %default total
 
