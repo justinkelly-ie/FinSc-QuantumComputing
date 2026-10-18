@@ -647,6 +647,56 @@ auditPauliXIInvolution =
   splice (stagedComposeBoxSquareMaxel (quote pauliXIBoxSquareMaxel) (quote pauliXIBoxSquareMaxel)) ==
   identityBoxSquareMaxel 4
 
+------------------------------------------------------------------------
+-- 4C. SEMANTIC BASIS OBSERVATION ON TYPED QUBIT OPERATOR TENSORS
+------------------------------------------------------------------------
+
+||| Canonical observation mapping a pair of 2-qubit basis states to its composite Pixel coordinate.
+public export
+twoBitBasisToPixel : ((Bit, Bit), (Bit, Bit)) -> Pixel
+twoBitBasisToPixel ((r1, r2), (c1, c2)) =
+  observeKroneckerPixel 2 ((bitToNat r1, bitToNat r2), (bitToNat c1, bitToNat c2))
+
+||| Single-qubit Pauli-X operator natively typed over semantic Bit.
+public export
+pauliXTypedOperator : MultisetTensor Bit Bit
+pauliXTypedOperator =
+  AddM (One, Zero) (intToBoxInt 1)
+    (AddM (Zero, One) (intToBoxInt 1) ZeroM)
+
+||| Single-qubit Pauli-Z operator natively typed over semantic Bit.
+public export
+pauliZTypedOperator : MultisetTensor Bit Bit
+pauliZTypedOperator =
+  AddM (Zero, Zero) (intToBoxInt 1)
+    (AddM (One, One) (intToBoxInt (-1)) ZeroM)
+
+||| Single-qubit Identity operator natively typed over semantic Bit.
+public export
+qubitIdTypedOperator : MultisetTensor Bit Bit
+qubitIdTypedOperator =
+  AddM (Zero, Zero) (intToBoxInt 1)
+    (AddM (One, One) (intToBoxInt 1) ZeroM)
+
+||| Synthesizes the 2-qubit Pauli-X ⊗ Pauli-X operator natively in the monoidal algebra
+||| before observing to a sparse BoxSquareMaxel 4.
+public export
+pauliXXTypedOperator : MultisetTensor (Bit, Bit) (Bit, Bit)
+pauliXXTypedOperator = tensorOperator pauliXTypedOperator pauliXTypedOperator
+
+||| Observes a typed 2-qubit operator into a sparse BoxSquareMaxel 4 via twoBitBasisToPixel pushforward.
+public export
+observeTwoBitOperator : MultisetTensor (Bit, Bit) (Bit, Bit) -> BoxSquareMaxel 4
+observeTwoBitOperator op = tensorToBoxSquareMaxel (mapMultiset twoBitBasisToPixel op)
+
+||| Verified Invariant: The algebraic pushforward of the typed operator tensor (pauliXTyped ⊗ pauliXTyped)
+||| definitionally equals the coordinate-level sparse matrix pauliXXBoxSquareMaxel.
+public export
+auditTypedKroneckerEquivalence : Bool
+auditTypedKroneckerEquivalence =
+  observeTwoBitOperator pauliXXTypedOperator == pauliXXBoxSquareMaxel
+
+
 
 ------------------------------------------------------------------------
 -- 5. MINKOWSKI DIHEDRON QUANTUM GATE BRIDGE (PHASE 4)
