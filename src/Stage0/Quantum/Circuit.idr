@@ -66,7 +66,7 @@ Functor GatePrepFunctor where
 
 public export
 (Eq a) => Eq (GatePrepFunctor a) where
-  (MkGatePrepFunctor m1 x1) == (MkGatePrepFunctor m2 x2) = (unwrapBox m1 == unwrapBox m2) && x1 == x2
+  (MkGatePrepFunctor m1 x1) == (MkGatePrepFunctor m2 x2) = (m1 == m2) && x1 == x2
 
 ||| Quantum Gate Measurement Functor (Right Adjoint R_Gate)
 public export
@@ -79,7 +79,7 @@ Functor GateMeasFunctor where
 
 public export
 (Eq a) => Eq (GateMeasFunctor a) where
-  (MkGateMeasFunctor m1 x1) == (MkGateMeasFunctor m2 x2) = (unwrapBox m1 == unwrapBox m2) && x1 == x2
+  (MkGateMeasFunctor m1 x1) == (MkGateMeasFunctor m2 x2) = (m1 == m2) && x1 == x2
 
 ||| Forward hom-tensor isomorphism for quantum gate preparation
 public export

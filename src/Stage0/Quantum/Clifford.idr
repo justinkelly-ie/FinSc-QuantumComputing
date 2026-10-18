@@ -245,12 +245,11 @@ lookupTreeAmplitude idx (MkTreeState p n) =
 public export
 insertTreeAmplitude : Nat -> BoxInt -> TreeStateVector -> TreeStateVector
 insertTreeAmplitude idx amp (MkTreeState p n) =
-  let w = unwrapBox amp
-  in if w > 0
-       then MkTreeState (insertTokenTree idx (integerToNat w) p) n
-       else if w < 0
-         then MkTreeState p (insertTokenTree idx (integerToNat (-w)) n)
-         else MkTreeState p n
+  if amp > 0
+    then MkTreeState (insertTokenTree idx (boxToNat amp) p) n
+    else if amp < 0
+      then MkTreeState p (insertTokenTree idx (boxToNat (negate amp)) n)
+      else MkTreeState p n
 
 ||| Total quantum state norm / token sum from balanced trees:
 public export
@@ -291,7 +290,7 @@ auditMultisetTreeAmplitudesProof =
       a1 = lookupTreeAmplitude 1 s3
       a2 = lookupTreeAmplitude 2 s3
       normVal = treeStateNorm s3
-  in unwrapBox a0 == 3 && unwrapBox a1 == (-4) && unwrapBox a2 == 5 && normVal == 12
+  in a0 == intToBoxInt 3 && a1 == intToBoxInt (-4) && a2 == intToBoxInt 5 && normVal == 12
 
 ||| Combined audit verifying Clifford stabilizer steppers and MultisetTree amplitudes.
 public export

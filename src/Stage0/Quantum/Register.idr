@@ -137,4 +137,4 @@ auditQuantumComonadProof : Bool
 auditQuantumComonadProof =
   let bellCtx = MkQuantumWaveContext "BellPhiPlus" bellStatePhiPlus
       entDensity = coevalEntanglementDensity bellCtx
-  in unwrapBox entDensity == 1
+  in entDensity == intToBoxInt 1

@@ -91,7 +91,7 @@ auditQuantumStateStreamProof : Bool
 auditQuantumStateStreamProof =
   let items = [(ZeroState, intToBoxInt 3), (OneState, intToBoxInt 4)]
       expVal = fusedExpectationValueFuelModel ellipticGohFuelModel items
-  in unwrapBox expVal == 25
+  in expVal == intToBoxInt 25
 
 --------------------------------------------------------------------------------
 -- 3. TRACE-PRESERVING QUANTUM STATE STREAM TRANSPORT
@@ -185,7 +185,7 @@ auditDensityPurityProof =
   let pureDyad = [MkDyadToken ZeroState ZeroState (intToBoxInt 1)]
       pureTrace = streamTraceDensityNat 10 (stream pureDyad)
       purePurity = streamQuantumPurityNat 10 (stream pureDyad)
-  in unwrapBox pureTrace == 1 && unwrapBox purePurity == 1
+  in pureTrace == intToBoxInt 1 && purePurity == intToBoxInt 1
 
 --------------------------------------------------------------------------------
 -- 5. LINEAR QTT LINDBLAD MASTER STREAM TRANSDUCER
@@ -223,7 +223,7 @@ auditStreamingLindbladTraceProof =
       strm0 = stream pureState
       strm1 = linearLindbladTransducer.stepLindblad strm0 (intToBoxInt 0)
       tr1 = streamTraceDensityNat 10 strm1
-  in unwrapBox tr1 == 1
+  in tr1 == intToBoxInt 1
 
 ||| Extracts the dissipated off-diagonal coherence from Lindblad damping as a deforested stream.
 public export
@@ -253,7 +253,7 @@ auditLindbladLandauerDecoherenceProof =
                    , MkDyadToken OneState  ZeroState (intToBoxInt 10)
                    , MkDyadToken OneState  OneState  (intToBoxInt 10) ]
       dissipated = fusedLindbladDissipatedEntropyNat 10 (intToBoxInt 1) (stream superState)
-  in unwrapBox dissipated == 20
+  in dissipated == intToBoxInt 20
 
 --------------------------------------------------------------------------------
 -- 6. DEFORESTED TRUTH-TABLE TO QUANTUM STATE STREAM INITIALIZATION
@@ -295,7 +295,7 @@ auditBooleQuantumStatePreparationProof : Bool
 auditBooleQuantumStatePreparationProof =
   let strm = streamQuantumStateFromBoolFn 4 (\i => snd (natHalfAndOdd i))
       expVal = fusedExpectationValueStreamNat 10 strm
-  in unwrapBox expVal == 4
+  in expVal == intToBoxInt 4
 
 
 
