@@ -45,7 +45,7 @@ Eq ConcreteQubitState where
 
 public export
 Show ConcreteQubitState where
-  show (MkConcreteQubit w) = "ConcreteQubit(Weight=" ++ show (unwrapBox w) ++ ")"
+  show (MkConcreteQubit w) = "ConcreteQubit(Weight=" ++ show w ++ ")"
 
 ||| Abstract quantum circuit macro domain state wrapping composite gate tensor BoxInt
 public export
@@ -59,7 +59,7 @@ Eq QuantumCircuitMacroDomain where
 
 public export
 Show QuantumCircuitMacroDomain where
-  show (MkQuantumCircuitMacro w) = "QuantumCircuitMacro(Tensor=" ++ show (unwrapBox w) ++ ")"
+  show (MkQuantumCircuitMacro w) = "QuantumCircuitMacro(Tensor=" ++ show w ++ ")"
 
 ||| Maps QuadStreamMultiset BoxInt to QuantumCircuitMacroDomain.
 public export
