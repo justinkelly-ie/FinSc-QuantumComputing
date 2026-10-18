@@ -12,6 +12,7 @@ import Stage1.MultisetDuality
 import Stage1.MaxelTransform
 import Stage1.MultisetTensor
 import Stage1.TypeTheory.Staging
+import Data.Vect
 
 %default total
 
@@ -229,3 +230,190 @@ public export
                              (c2 : CPTPQuantumChannel t1 t2 totalTrace) ->
                              stagedGateFusion tracePrf (quote c1) (quote c2) = fuseCPTPChannels tracePrf c1 c2
 prfStagedGateFusionTrace _ _ _ = Refl
+
+-----------------------------------------------------------------------
+-- 3. DIMENSION-INDEXED 2LTT STAGED QUANTUM GATES (MaxelN & VexelN)
+-----------------------------------------------------------------------
+
+||| Pauli-X (NOT) Gate Maxel: [[0, 1], [1, 0]].
+public export
+pauliXMaxel : MaxelN 2
+pauliXMaxel = mkMaxel2 (intToBoxInt 0) (intToBoxInt 1)
+                       (intToBoxInt 1) (intToBoxInt 0)
+
+||| Pauli-X (NOT) Gate Matrix projection.
+public export
+pauliXMat : Vect 2 (Vect 2 BoxInt)
+pauliXMat = rows pauliXMaxel
+
+||| Pauli-Z (Phase-Flip) Gate Maxel: [[1, 0], [0, -1]].
+public export
+pauliZMaxel : MaxelN 2
+pauliZMaxel = mkMaxel2 (intToBoxInt 1) (intToBoxInt 0)
+                       (intToBoxInt 0) (intToBoxInt (-1))
+
+||| Pauli-Z (Phase-Flip) Gate Matrix projection.
+public export
+pauliZMat : Vect 2 (Vect 2 BoxInt)
+pauliZMat = rows pauliZMaxel
+
+||| 2-Dimensional Qubit Identity Gate Maxel: I_2.
+public export
+qubitId2Maxel : MaxelN 2
+qubitId2Maxel = stagedIdentityMaxelN 2
+
+||| 2-Dimensional Qubit Identity Gate Matrix projection.
+public export
+qubitId2Mat : Vect 2 (Vect 2 BoxInt)
+qubitId2Mat = rows qubitId2Maxel
+
+||| Unscaled Hadamard Gate Maxel: [[1, 1], [1, -1]].
+public export
+hadamardUnscaledMaxel : MaxelN 2
+hadamardUnscaledMaxel = mkMaxel2 (intToBoxInt 1) (intToBoxInt 1)
+                                 (intToBoxInt 1) (intToBoxInt (-1))
+
+||| Unscaled Hadamard Gate Matrix projection.
+public export
+hadamardUnscaledMat : Vect 2 (Vect 2 BoxInt)
+hadamardUnscaledMat = rows hadamardUnscaledMaxel
+
+||| Deforested 2LTT staged single-qubit gate application on typed VexelN 2:
+||| Multiplies a staged 2x2 MaxelN by a 2-dimensional VexelN in O(1) heap allocations.
+public export
+stagedApplyGate2x2 : Lift (MaxelN 2) -> VexelN 2 -> Code (VexelN 2)
+stagedApplyGate2x2 = stagedMaxelNVec
+
+||| Deforested 2LTT staged single-qubit gate composition:
+||| Multiplies two staged 2x2 MaxelN gates into a single fused 2x2 MaxelN at compile time.
+public export
+stagedComposeGates2x2 : Lift (MaxelN 2) -> Lift (MaxelN 2) -> Code (MaxelN 2)
+stagedComposeGates2x2 = stagedMaxelNMul
+
+||| Verified Invariant: Staged Pauli-X gate is self-inverse (X^2 = I_2).
+public export
+auditPauliXInvolution : Bool
+auditPauliXInvolution =
+  splice (stagedComposeGates2x2 (quote pauliXMaxel) (quote pauliXMaxel)) == qubitId2Maxel
+
+||| Verified Invariant: Staged Pauli-Z gate is self-inverse (Z^2 = I_2).
+public export
+auditPauliZInvolution : Bool
+auditPauliZInvolution =
+  splice (stagedComposeGates2x2 (quote pauliZMaxel) (quote pauliZMaxel)) == qubitId2Maxel
+
+||| Verified Invariant: Staged unscaled Hadamard gate squares to 2 * I_2.
+public export
+auditHadamardSquare : Bool
+auditHadamardSquare =
+  splice (stagedComposeGates2x2 (quote hadamardUnscaledMaxel) (quote hadamardUnscaledMaxel)) ==
+  mkMaxel2 (intToBoxInt 2) (intToBoxInt 0) (intToBoxInt 0) (intToBoxInt 2)
+
+-----------------------------------------------------------------------
+-- 4. TWO-QUBIT ENTANGLEMENT GATES & STAGED BELL CIRCUITS (N=4)
+-----------------------------------------------------------------------
+
+||| Controlled-NOT (CNOT) 4x4 Gate Matrix: [[1,0,0,0],[0,1,0,0],[0,0,0,1],[0,0,1,0]].
+public export
+cnotMat : Vect 4 (Vect 4 BoxInt)
+cnotMat = [[intToBoxInt 1, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0],
+           [intToBoxInt 0, intToBoxInt 1, intToBoxInt 0, intToBoxInt 0],
+           [intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 1],
+           [intToBoxInt 0, intToBoxInt 0, intToBoxInt 1, intToBoxInt 0]]
+
+||| Controlled-NOT (CNOT) 4x4 Gate Maxel:
+public export
+cnotMaxel : MaxelN 4
+cnotMaxel = mkMaxel4 cnotMat
+
+||| SWAP 4x4 Gate Matrix: [[1,0,0,0],[0,0,1,0],[0,1,0,0],[0,0,0,1]].
+public export
+swapMat : Vect 4 (Vect 4 BoxInt)
+swapMat = [[intToBoxInt 1, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0],
+           [intToBoxInt 0, intToBoxInt 0, intToBoxInt 1, intToBoxInt 0],
+           [intToBoxInt 0, intToBoxInt 1, intToBoxInt 0, intToBoxInt 0],
+           [intToBoxInt 0, intToBoxInt 0, intToBoxInt 0, intToBoxInt 1]]
+
+||| SWAP 4x4 Gate Maxel:
+public export
+swapMaxel : MaxelN 4
+swapMaxel = mkMaxel4 swapMat
+
+||| 4-Dimensional Qubit Identity Gate Maxel: I_4.
+public export
+qubitId4Maxel : MaxelN 4
+qubitId4Maxel = stagedIdentityMaxelN 4
+
+||| 4-Dimensional Qubit Identity Gate Matrix projection.
+public export
+qubitId4Mat : Vect 4 (Vect 4 BoxInt)
+qubitId4Mat = rows qubitId4Maxel
+
+||| Deforested 2LTT staged two-qubit gate application on typed VexelN 4:
+||| Multiplies a staged 4x4 MaxelN by a 4-dimensional VexelN in O(1) heap allocations.
+public export
+stagedApplyGate4x4 : Lift (MaxelN 4) -> VexelN 4 -> Code (VexelN 4)
+stagedApplyGate4x4 = stagedMaxelNVec
+
+||| Deforested 2LTT staged two-qubit gate composition:
+||| Multiplies two staged 4x4 MaxelN gates into a single fused 4x4 MaxelN at compile time.
+public export
+stagedComposeGates4x4 : Lift (MaxelN 4) -> Lift (MaxelN 4) -> Code (MaxelN 4)
+stagedComposeGates4x4 = stagedMaxelNMul
+
+||| Verified Invariant: Staged CNOT gate is self-inverse (CNOT^2 = I_4).
+public export
+auditCNOTInvolution : Bool
+auditCNOTInvolution =
+  splice (stagedComposeGates4x4 (quote cnotMaxel) (quote cnotMaxel)) == qubitId4Maxel
+
+||| Verified Invariant: Staged SWAP gate is self-inverse (SWAP^2 = I_4).
+public export
+auditSWAPInvolution : Bool
+auditSWAPInvolution =
+  splice (stagedComposeGates4x4 (quote swapMaxel) (quote swapMaxel)) == qubitId4Maxel
+
+||| Exact Kronecker tensor product of two 2x2 matrices into a 4x4 matrix: A ⊗ B.
+public export
+kronecker2x2 : Vect 2 (Vect 2 BoxInt) -> Vect 2 (Vect 2 BoxInt) -> Vect 4 (Vect 4 BoxInt)
+kronecker2x2 [[a00, a01], [a10, a11]] [[b00, b01], [b10, b11]] =
+  [[a00 * b00, a00 * b01, a01 * b00, a01 * b01],
+   [a00 * b10, a00 * b11, a01 * b10, a01 * b11],
+   [a10 * b00, a10 * b01, a11 * b00, a11 * b01],
+   [a10 * b10, a10 * b11, a11 * b10, a11 * b11]]
+
+||| Exact Kronecker tensor product of two MaxelN 2 into a MaxelN 4: A ⊗ B.
+public export
+kroneckerMaxel2 : MaxelN 2 -> MaxelN 2 -> MaxelN 4
+kroneckerMaxel2 (MkMaxelN a) (MkMaxelN b) = MkMaxelN (kronecker2x2 a b)
+
+||| Staged 2LTT Kronecker tensor product: Quotes compile-time tensor product of two MaxelN 2 gates.
+public export
+stagedKronecker2x2 : Lift (MaxelN 2) -> Lift (MaxelN 2) -> Code (MaxelN 4)
+stagedKronecker2x2 qa qb = quote (kroneckerMaxel2 (splice qa) (splice qb))
+
+||| Staged Bell State Synthesizer Maxel: CNOT ∘ (H ⊗ I_2).
+public export
+bellCircuitMaxel : MaxelN 4
+bellCircuitMaxel = MkMaxelN (stagedUnrollMatMul (rows cnotMaxel) (kronecker2x2 (rows hadamardUnscaledMaxel) (rows qubitId2Maxel)))
+
+||| Staged Bell State Synthesizer Matrix projection.
+public export
+bellCircuitMat : Vect 4 (Vect 4 BoxInt)
+bellCircuitMat = rows bellCircuitMaxel
+
+||| Deforested 2LTT staged Bell circuit evaluator on typed VexelN 4:
+||| Transforms a 2-qubit basis state Vexel into an entangled Bell state Vexel.
+public export
+stagedBellState : VexelN 4 -> Code (VexelN 4)
+stagedBellState v = quote (MkVexelN (stagedUnrollMatVec (rows bellCircuitMaxel) (components v)))
+
+||| Verified Invariant: Applying the staged Bell circuit to pure basis Vexel |00> = [1, 0, 0, 0]
+||| produces the entangled Bell state Vexel |Φ+> = |00> + |11> = [1, 0, 0, 1].
+public export
+auditBellStateCircuit : Bool
+auditBellStateCircuit =
+  splice (stagedBellState (mkVexel4 (intToBoxInt 1) (intToBoxInt 0) (intToBoxInt 0) (intToBoxInt 0))) ==
+  mkVexel4 (intToBoxInt 1) (intToBoxInt 0) (intToBoxInt 0) (intToBoxInt 1)
+
+
