@@ -4,7 +4,7 @@ import Stage0.Singleton.Bit
 import Stage0.Singleton.Sing
 import Stage1.Dihedron
 import public Stage0.BoxInt
-import Stage1.VexelMaxel
+import Stage1.Basis.Coordinate
 import Stage1.UnixelFraction
 
 %default total

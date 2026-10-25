@@ -6,7 +6,9 @@ import Stage1.Dihedron
 import Stage0.BoxInt
 import Stage0.WitnessLedger
 import Stage1.Order.Preorder
-import Stage1.VexelMaxel
+import Stage1.Carrier.Maxel
+import Stage1.Carrier.Vexel
+import Stage1.Basis.Coordinate
 import Stage1.MultisetTree
 import Stage1.UnixelFraction
 import Stage1.MultisetDuality
@@ -34,14 +36,14 @@ TracePreservingChannel t0 t1 totalTrace = natAdd t0 t1 = totalTrace
 public export
 record CPTPQuantumChannel (t0 : Nat) (t1 : Nat) (totalTrace : Nat) where
   constructor MkCPTPQuantumChannel
-  channelMatrix : Stage1.VexelMaxel.Maxel
+  channelMatrix : Maxel
   0 tracePrf    : TracePreservingChannel t0 t1 totalTrace
 
 ||| Constructs a validated CPTP quantum channel with an erased compile-time trace preservation proof.
 public export
 makeCPTPChannel : (t0 : Nat) -> (t1 : Nat) -> (totalTrace : Nat) ->
                   (0 prf : TracePreservingChannel t0 t1 totalTrace) ->
-                  Stage1.VexelMaxel.Maxel ->
+                  Maxel ->
                   CPTPQuantumChannel t0 t1 totalTrace
 makeCPTPChannel t0 t1 tot prf mat = MkCPTPQuantumChannel mat prf
 

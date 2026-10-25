@@ -3,7 +3,7 @@ module Stage0.Quantum.Register
 import Stage0.Quantum.Qubit
 import Stage1.Dihedron
 import Stage0.BoxInt
-import Stage1.VexelMaxel
+import Stage1.Basis.Coordinate
 import Stage1.UnixelFraction
 import Data.Vect
 
