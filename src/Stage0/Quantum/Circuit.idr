@@ -6,8 +6,6 @@ import Stage1.Dihedron
 import Stage0.BoxInt
 import Stage0.WitnessLedger
 import Stage1.Order.Preorder
-import Stage1.Carrier.Maxel
-import Stage1.Carrier.Vexel
 import Stage1.Basis.Coordinate
 import Stage1.MultisetTree
 import Stage1.UnixelFraction
