@@ -16,6 +16,7 @@ import Stage1.TypeTheory.Staging
 import Stage1.DihedronModel as DM
 import Stage0.OnSeq.FusedStream as FS
 import Data.Vect
+import Stage1.ProjectiveRotation as PR
 
 %default total
 
@@ -376,38 +377,38 @@ auditSWAPInvolution : Bool
 auditSWAPInvolution =
   splice (stagedComposeGates4x4 (quote swapMaxel) (quote swapMaxel)) == qubitId4Maxel
 
-||| 2-Qubit Controlled-NOT (CNOT) Gate as a sparse BoxSquareMaxel 4:
+||| 2-Qubit Controlled-NOT (CNOT) Gate as a sparse SquareMaxel 4:
 ||| Supported on exactly 4 active non-zero pixels out of 16 matrix elements (75% sparse).
 public export
-cnotBoxSquareMaxel : BoxSquareMaxel 4
-cnotBoxSquareMaxel = maxelNToBoxSquareMaxel cnotMaxel
+cnotSquareMaxel : SquareMaxel 4
+cnotSquareMaxel = maxelNToSquareMaxel cnotMaxel
 
-||| 2-Qubit SWAP Gate as a sparse BoxSquareMaxel 4:
+||| 2-Qubit SWAP Gate as a sparse SquareMaxel 4:
 ||| Supported on exactly 4 active non-zero pixels out of 16 matrix elements (75% sparse).
 public export
-swapBoxSquareMaxel : BoxSquareMaxel 4
-swapBoxSquareMaxel = maxelNToBoxSquareMaxel swapMaxel
+swapSquareMaxel : SquareMaxel 4
+swapSquareMaxel = maxelNToSquareMaxel swapMaxel
 
 ||| Verified Invariant: Staged CNOT sparse gate is self-inverse (CNOT^2 = I_4).
 public export
 auditCNOTSparseInvolution : Bool
 auditCNOTSparseInvolution =
-  splice (stagedComposeBoxSquareMaxel (quote cnotBoxSquareMaxel) (quote cnotBoxSquareMaxel)) ==
-  identityBoxSquareMaxel 4
+  splice (stagedComposeSquareMaxel (quote cnotSquareMaxel) (quote cnotSquareMaxel)) ==
+  identitySquareMaxel 4
 
 ||| Verified Invariant: Staged SWAP sparse gate is self-inverse (SWAP^2 = I_4).
 public export
 auditSWAPSparseInvolution : Bool
 auditSWAPSparseInvolution =
-  splice (stagedComposeBoxSquareMaxel (quote swapBoxSquareMaxel) (quote swapBoxSquareMaxel)) ==
-  identityBoxSquareMaxel 4
+  splice (stagedComposeSquareMaxel (quote swapSquareMaxel) (quote swapSquareMaxel)) ==
+  identitySquareMaxel 4
 
 ||| Verified Invariant: Applying sparse CNOT to basis state |10> = [0, 0, 1, 0] produces |11> = [0, 0, 0, 1].
 public export
 auditCNOTSparseStateContraction : Bool
 auditCNOTSparseStateContraction =
   let inV = mkVexel4 (intToBoxInt 0) (intToBoxInt 0) (intToBoxInt 1) (intToBoxInt 0)
-      outV = splice (stagedContractBoxSquareDense (quote cnotBoxSquareMaxel) inV)
+      outV = splice (stagedContractSquareMaxelDense (quote cnotSquareMaxel) inV)
       expected = mkVexel4 (intToBoxInt 0) (intToBoxInt 0) (intToBoxInt 0) (intToBoxInt 1)
   in outV == expected
 
@@ -528,124 +529,124 @@ auditFredkinGateInvolution : Bool
 auditFredkinGateInvolution =
   splice (stagedComposeGatesN (quote fredkinMaxel) (quote fredkinMaxel)) == qubitId8Maxel
 
-||| 3-Qubit Toffoli (CCNOT) Gate as a sparse BoxSquareMaxel 8:
+||| 3-Qubit Toffoli (CCNOT) Gate as a sparse SquareMaxel 8:
 ||| Supported on exactly 8 active non-zero pixels out of 64 matrix elements (87.5% sparse).
 public export
-toffoliBoxSquareMaxel : BoxSquareMaxel 8
-toffoliBoxSquareMaxel = maxelNToBoxSquareMaxel toffoliMaxel
+toffoliSquareMaxel : SquareMaxel 8
+toffoliSquareMaxel = maxelNToSquareMaxel toffoliMaxel
 
-||| 3-Qubit Fredkin (CSWAP) Gate as a sparse BoxSquareMaxel 8:
+||| 3-Qubit Fredkin (CSWAP) Gate as a sparse SquareMaxel 8:
 ||| Supported on exactly 8 active non-zero pixels out of 64 matrix elements (87.5% sparse).
 public export
-fredkinBoxSquareMaxel : BoxSquareMaxel 8
-fredkinBoxSquareMaxel = maxelNToBoxSquareMaxel fredkinMaxel
+fredkinSquareMaxel : SquareMaxel 8
+fredkinSquareMaxel = maxelNToSquareMaxel fredkinMaxel
 
 ||| Verified Invariant: Staged Toffoli sparse gate is self-inverse (Toffoli^2 = I_8).
 public export
 auditToffoliSparseInvolution : Bool
 auditToffoliSparseInvolution =
-  splice (stagedComposeBoxSquareMaxel (quote toffoliBoxSquareMaxel) (quote toffoliBoxSquareMaxel)) ==
-  identityBoxSquareMaxel 8
+  splice (stagedComposeSquareMaxel (quote toffoliSquareMaxel) (quote toffoliSquareMaxel)) ==
+  identitySquareMaxel 8
 
 ||| Verified Invariant: Staged Fredkin sparse gate is self-inverse (Fredkin^2 = I_8).
 public export
 auditFredkinSparseInvolution : Bool
 auditFredkinSparseInvolution =
-  splice (stagedComposeBoxSquareMaxel (quote fredkinBoxSquareMaxel) (quote fredkinBoxSquareMaxel)) ==
-  identityBoxSquareMaxel 8
+  splice (stagedComposeSquareMaxel (quote fredkinSquareMaxel) (quote fredkinSquareMaxel)) ==
+  identitySquareMaxel 8
 
 ------------------------------------------------------------------------
 -- 4B. COMPOSITIONAL SPARSE MULTI-QUBIT KRONECKER GATE SYNTHESIS
 ------------------------------------------------------------------------
 
-||| Single-qubit identity gate as a sparse BoxSquareMaxel 2.
+||| Single-qubit identity gate as a sparse SquareMaxel 2.
 public export
-qubitIdBoxSquareMaxel : BoxSquareMaxel 2
-qubitIdBoxSquareMaxel = identityBoxSquareMaxel 2
+qubitIdSquareMaxel : SquareMaxel 2
+qubitIdSquareMaxel = identitySquareMaxel 2
 
-||| Single-qubit Pauli-X (NOT) gate as a sparse BoxSquareMaxel 2: [[0, 1], [1, 0]].
+||| Single-qubit Pauli-X (NOT) gate as a sparse SquareMaxel 2: [[0, 1], [1, 0]].
 public export
-pauliXBoxSquareMaxel : BoxSquareMaxel 2
-pauliXBoxSquareMaxel = maxelNToBoxSquareMaxel pauliXMaxel
+pauliXSquareMaxel : SquareMaxel 2
+pauliXSquareMaxel = maxelNToSquareMaxel pauliXMaxel
 
-||| Single-qubit Pauli-Z (Phase Flip) gate as a sparse BoxSquareMaxel 2: [[1, 0], [0, -1]].
+||| Single-qubit Pauli-Z (Phase Flip) gate as a sparse SquareMaxel 2: [[1, 0], [0, -1]].
 public export
-pauliZBoxSquareMaxel : BoxSquareMaxel 2
-pauliZBoxSquareMaxel = maxelNToBoxSquareMaxel pauliZMaxel
+pauliZSquareMaxel : SquareMaxel 2
+pauliZSquareMaxel = maxelNToSquareMaxel pauliZMaxel
 
-||| Single-qubit unscaled Hadamard gate as a sparse BoxSquareMaxel 2: [[1, 1], [1, -1]].
+||| Single-qubit unscaled Hadamard gate as a sparse SquareMaxel 2: [[1, 1], [1, -1]].
 public export
-hadamardBoxSquareMaxel : BoxSquareMaxel 2
-hadamardBoxSquareMaxel = maxelNToBoxSquareMaxel hadamardUnscaledMaxel
+hadamardSquareMaxel : SquareMaxel 2
+hadamardSquareMaxel = maxelNToSquareMaxel hadamardUnscaledMaxel
 
 ||| Parallel multi-qubit gate tensor product via sparse Kronecker composition:
 ||| Computes A ⊗ B in O(K1 * K2 log(m * n)) over active non-zero support only.
 public export
-gateTensorBoxSquare : {m, n : Nat} -> BoxSquareMaxel m -> BoxSquareMaxel n -> BoxSquareMaxel (m * n)
-gateTensorBoxSquare = kroneckerBoxSquareMaxel
+gateTensorSquare : {m, n : Nat} -> SquareMaxel m -> SquareMaxel n -> SquareMaxel (m * n)
+gateTensorSquare = kroneckerSquareMaxel
 
 ||| 2LTT Staged parallel multi-qubit gate tensor product.
 public export
-stagedGateTensorBoxSquare : {m, n : Nat} -> Lift (BoxSquareMaxel m) -> Lift (BoxSquareMaxel n) -> Code (BoxSquareMaxel (m * n))
-stagedGateTensorBoxSquare = stagedKroneckerBoxSquareMaxel
+stagedGateTensorSquare : {m, n : Nat} -> Lift (SquareMaxel m) -> Lift (SquareMaxel n) -> Code (SquareMaxel (m * n))
+stagedGateTensorSquare = stagedKroneckerSquareMaxel
 
-||| 2-Qubit Pauli-X ⊗ Pauli-X operator as a sparse BoxSquareMaxel 4.
+||| 2-Qubit Pauli-X ⊗ Pauli-X operator as a sparse SquareMaxel 4.
 public export
-pauliXXBoxSquareMaxel : BoxSquareMaxel 4
-pauliXXBoxSquareMaxel = kroneckerBoxSquareMaxel pauliXBoxSquareMaxel pauliXBoxSquareMaxel
+pauliXXSquareMaxel : SquareMaxel 4
+pauliXXSquareMaxel = kroneckerSquareMaxel pauliXSquareMaxel pauliXSquareMaxel
 
-||| 2-Qubit Pauli-Z ⊗ Pauli-Z operator as a sparse BoxSquareMaxel 4.
+||| 2-Qubit Pauli-Z ⊗ Pauli-Z operator as a sparse SquareMaxel 4.
 public export
-pauliZZBoxSquareMaxel : BoxSquareMaxel 4
-pauliZZBoxSquareMaxel = kroneckerBoxSquareMaxel pauliZBoxSquareMaxel pauliZBoxSquareMaxel
+pauliZZSquareMaxel : SquareMaxel 4
+pauliZZSquareMaxel = kroneckerSquareMaxel pauliZSquareMaxel pauliZSquareMaxel
 
-||| 2-Qubit Pauli-X ⊗ I_2 operator as a sparse BoxSquareMaxel 4.
+||| 2-Qubit Pauli-X ⊗ I_2 operator as a sparse SquareMaxel 4.
 public export
-pauliXIBoxSquareMaxel : BoxSquareMaxel 4
-pauliXIBoxSquareMaxel = kroneckerBoxSquareMaxel pauliXBoxSquareMaxel qubitIdBoxSquareMaxel
+pauliXISquareMaxel : SquareMaxel 4
+pauliXISquareMaxel = kroneckerSquareMaxel pauliXSquareMaxel qubitIdSquareMaxel
 
-||| 2-Qubit I_2 ⊗ Pauli-X operator as a sparse BoxSquareMaxel 4.
+||| 2-Qubit I_2 ⊗ Pauli-X operator as a sparse SquareMaxel 4.
 public export
-pauliIXBoxSquareMaxel : BoxSquareMaxel 4
-pauliIXBoxSquareMaxel = kroneckerBoxSquareMaxel qubitIdBoxSquareMaxel pauliXBoxSquareMaxel
+pauliIXSquareMaxel : SquareMaxel 4
+pauliIXSquareMaxel = kroneckerSquareMaxel qubitIdSquareMaxel pauliXSquareMaxel
 
-||| 2-Qubit Hadamard H ⊗ H operator as a sparse BoxSquareMaxel 4.
+||| 2-Qubit Hadamard H ⊗ H operator as a sparse SquareMaxel 4.
 public export
-hadamard2QubitBoxSquareMaxel : BoxSquareMaxel 4
-hadamard2QubitBoxSquareMaxel = kroneckerBoxSquareMaxel hadamardBoxSquareMaxel hadamardBoxSquareMaxel
+hadamard2QubitSquareMaxel : SquareMaxel 4
+hadamard2QubitSquareMaxel = kroneckerSquareMaxel hadamardSquareMaxel hadamardSquareMaxel
 
-||| 3-Qubit Hadamard H ⊗ H ⊗ H operator as a sparse BoxSquareMaxel 8.
+||| 3-Qubit Hadamard H ⊗ H ⊗ H operator as a sparse SquareMaxel 8.
 public export
-hadamard3QubitBoxSquareMaxel : BoxSquareMaxel 8
-hadamard3QubitBoxSquareMaxel = kroneckerBoxSquareMaxel hadamard2QubitBoxSquareMaxel hadamardBoxSquareMaxel
+hadamard3QubitSquareMaxel : SquareMaxel 8
+hadamard3QubitSquareMaxel = kroneckerSquareMaxel hadamard2QubitSquareMaxel hadamardSquareMaxel
 
 ||| Verified Invariant: Kronecker tensor product of identity matrices yields the composite identity:
 ||| I_2 ⊗ I_2 = I_4.
 public export
 auditKroneckerIdentity2x2 : Bool
 auditKroneckerIdentity2x2 =
-  kroneckerBoxSquareMaxel (identityBoxSquareMaxel 2) (identityBoxSquareMaxel 2) == identityBoxSquareMaxel 4
+  kroneckerSquareMaxel (identitySquareMaxel 2) (identitySquareMaxel 2) == identitySquareMaxel 4
 
 ||| Verified Invariant: 2-qubit Pauli-X ⊗ Pauli-X is self-inverse: (X ⊗ X)^2 = I_4.
 public export
 auditPauliXXInvolution : Bool
 auditPauliXXInvolution =
-  splice (stagedComposeBoxSquareMaxel (quote pauliXXBoxSquareMaxel) (quote pauliXXBoxSquareMaxel)) ==
-  identityBoxSquareMaxel 4
+  splice (stagedComposeSquareMaxel (quote pauliXXSquareMaxel) (quote pauliXXSquareMaxel)) ==
+  identitySquareMaxel 4
 
 ||| Verified Invariant: 2-qubit Pauli-Z ⊗ Pauli-Z is self-inverse: (Z ⊗ Z)^2 = I_4.
 public export
 auditPauliZZInvolution : Bool
 auditPauliZZInvolution =
-  splice (stagedComposeBoxSquareMaxel (quote pauliZZBoxSquareMaxel) (quote pauliZZBoxSquareMaxel)) ==
-  identityBoxSquareMaxel 4
+  splice (stagedComposeSquareMaxel (quote pauliZZSquareMaxel) (quote pauliZZSquareMaxel)) ==
+  identitySquareMaxel 4
 
 ||| Verified Invariant: 2-qubit Pauli-X ⊗ I_2 is self-inverse: (X ⊗ I_2)^2 = I_4.
 public export
 auditPauliXIInvolution : Bool
 auditPauliXIInvolution =
-  splice (stagedComposeBoxSquareMaxel (quote pauliXIBoxSquareMaxel) (quote pauliXIBoxSquareMaxel)) ==
-  identityBoxSquareMaxel 4
+  splice (stagedComposeSquareMaxel (quote pauliXISquareMaxel) (quote pauliXISquareMaxel)) ==
+  identitySquareMaxel 4
 
 ------------------------------------------------------------------------
 -- 4C. SEMANTIC BASIS OBSERVATION ON TYPED QUBIT OPERATOR TENSORS
@@ -679,22 +680,22 @@ qubitIdTypedOperator =
     (AddM (One, One) (intToBoxInt 1) ZeroM)
 
 ||| Synthesizes the 2-qubit Pauli-X ⊗ Pauli-X operator natively in the monoidal algebra
-||| before observing to a sparse BoxSquareMaxel 4.
+||| before observing to a sparse SquareMaxel 4.
 public export
 pauliXXTypedOperator : MultisetTensor (Bit, Bit) (Bit, Bit)
 pauliXXTypedOperator = tensorOperator pauliXTypedOperator pauliXTypedOperator
 
-||| Observes a typed 2-qubit operator into a sparse BoxSquareMaxel 4 via twoBitBasisToPixel pushforward.
+||| Observes a typed 2-qubit operator into a sparse SquareMaxel 4 via twoBitBasisToPixel pushforward.
 public export
-observeTwoBitOperator : MultisetTensor (Bit, Bit) (Bit, Bit) -> BoxSquareMaxel 4
-observeTwoBitOperator op = tensorToBoxSquareMaxel (mapMultiset twoBitBasisToPixel op)
+observeTwoBitOperator : MultisetTensor (Bit, Bit) (Bit, Bit) -> SquareMaxel 4
+observeTwoBitOperator op = tensorToSquareMaxel (mapMultiset twoBitBasisToPixel op)
 
 ||| Verified Invariant: The algebraic pushforward of the typed operator tensor (pauliXTyped ⊗ pauliXTyped)
-||| definitionally equals the coordinate-level sparse matrix pauliXXBoxSquareMaxel.
+||| definitionally equals the coordinate-level sparse matrix pauliXXSquareMaxel.
 public export
 auditTypedKroneckerEquivalence : Bool
 auditTypedKroneckerEquivalence =
-  observeTwoBitOperator pauliXXTypedOperator == pauliXXBoxSquareMaxel
+  observeTwoBitOperator pauliXXTypedOperator == pauliXXSquareMaxel
 
 
 
@@ -779,3 +780,33 @@ auditStagedCircuitReductionProof =
       compiledCode = stagedCompileOptimizedCircuit 20 tenXs
       compiledMaxel = splice compiledCode
   in compiledMaxel == qubitId2Maxel
+
+------------------------------------------------------------------------
+-- 7. 2LTT STAGED 3D BLOCH SPHERE ROTATIONS
+------------------------------------------------------------------------
+
+||| Discrete Constructivist Bloch Vector: a 3-vector (x, y, z) on the Bloch sphere.
+public export
+BlochVector : Type
+BlochVector = Vect 3 BoxInt
+
+||| 2LTT Staged Single-Qubit Bloch Rotation Fusion:
+||| Fuses two single-qubit SO(3; Q) projective rotations at Level 1 and acts
+||| directly on the Bloch vector, saving intermediate 3x3 matrix multiplication.
+public export
+stagedRotateBlochVector : Lift PR.ProjectiveProportion -> Lift PR.ProjectiveProportion -> BlochVector -> Code BlochVector
+stagedRotateBlochVector qP1 qP2 v =
+  PR.stagedFusedRotateVector qP1 qP2 v
+
+||| Staged evaluation of fused Bloch rotation:
+public export
+evalStagedRotateBlochVector : Lift PR.ProjectiveProportion -> Lift PR.ProjectiveProportion -> BlochVector -> BlochVector
+evalStagedRotateBlochVector qP1 qP2 v =
+  PR.evalStagedFusedRotateVector qP1 qP2 v
+
+||| QTT 0 Erased Proof Witness: Staged Bloch Rotation Invariant
+public export
+0 prfStagedRotateBlochVector : (p1, p2 : PR.ProjectiveProportion) -> (v : BlochVector) ->
+                              splice (stagedRotateBlochVector (quote p1) (quote p2) v) =
+                                PR.rotateVectorScaled (PR.composeProportion p2 p1) v
+prfStagedRotateBlochVector _ _ _ = Refl
