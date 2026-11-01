@@ -79,7 +79,7 @@ auditPureKrausBranchProof =
   let branch = pureKrausBranch {stateType = Nat} id
       tf = branch.branchMap (MkToken 42)
   in case tf of
-       OverUnixel (MkToken 42) (MkCoordCell (Node 1 Leaf 0 1 Leaf)) => True
+       OverUnixel (MkToken 42) (ConsCell (MkToken 1) ZeroCell) => True
        _ => False
 
 ||| Compile-time witness: pureKrausBranch preserves unit rational weight.
