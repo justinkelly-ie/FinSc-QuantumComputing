@@ -810,3 +810,74 @@ public export
                               splice (stagedRotateBlochVector (quote p1) (quote p2) v) =
                                 PR.rotateVectorScaled (PR.composeProportion p2 p1) v
 prfStagedRotateBlochVector _ _ _ = Refl
+
+------------------------------------------------------------------------
+-- 8. PROJECTIVE QUANTUM GATE ALGEBRA (QubitCircuitExpr)
+------------------------------------------------------------------------
+
+||| Inductive AST for single-qubit quantum circuits over Dihedron and Projective Proportions:
+public export
+data QubitCircuitExpr : Type where
+  GateId   : QubitCircuitExpr
+  GateX    : QubitCircuitExpr
+  GateZ    : QubitCircuitExpr
+  GateRot  : PR.ProjectiveProportion -> QubitCircuitExpr
+  SeqGate  : QubitCircuitExpr -> QubitCircuitExpr -> QubitCircuitExpr
+
+||| Evaluates a single-qubit quantum circuit AST into a composite 2x2 Dihedron2 matrix:
+public export
+collapseCircuitExpr : QubitCircuitExpr -> DM.Dihedron2
+collapseCircuitExpr GateId = DM.identityDihedron2
+collapseCircuitExpr GateX = pauliXDihedron
+collapseCircuitExpr GateZ = pauliZDihedron
+collapseCircuitExpr (GateRot p) = DM.fromProportionMink p.xCoord p.tCoord p.rCoord p.sCoord
+collapseCircuitExpr (SeqGate g1 g2) = DM.mulDihedron2 (collapseCircuitExpr g1) (collapseCircuitExpr g2)
+
+||| Symbolically reduces self-inverse and identity gates in circuit expressions:
+public export
+normalizeCircuitExpr : (fuel : Nat) -> QubitCircuitExpr -> QubitCircuitExpr
+normalizeCircuitExpr Z e = e
+normalizeCircuitExpr (S f) GateId = GateId
+normalizeCircuitExpr (S f) GateX = GateX
+normalizeCircuitExpr (S f) GateZ = GateZ
+normalizeCircuitExpr (S f) (GateRot p) = GateRot p
+normalizeCircuitExpr (S f) (SeqGate g1 g2) =
+  let n1 = normalizeCircuitExpr f g1
+      n2 = normalizeCircuitExpr f g2
+  in case (n1, n2) of
+       (GateId, r) => r
+       (l, GateId) => l
+       (GateX, GateX) => GateId
+       (GateZ, GateZ) => GateId
+       (l, r) => SeqGate l r
+
+||| 2LTT Staged Quantum Circuit Expression Compiler:
+||| Evaluates gate compositions symbolically at Level 1, compiling the entire
+||| circuit expression into a single compiled Level 0 runtime MaxelN 2 matrix.
+public export
+stagedCompileCircuitExpr : (fuel : Nat) -> QubitCircuitExpr -> Code (MaxelN 2)
+stagedCompileCircuitExpr fuel expr =
+  let norm = normalizeCircuitExpr fuel expr
+  in quote (dihedronToMaxelN2 (collapseCircuitExpr norm))
+
+||| Staged evaluation of circuit expression compiler:
+public export
+evalStagedCompileCircuitExpr : (fuel : Nat) -> QubitCircuitExpr -> MaxelN 2
+evalStagedCompileCircuitExpr fuel expr =
+  splice (stagedCompileCircuitExpr fuel expr)
+
+||| QTT 0 Erased Proof Witness: Circuit Expression Staged Compilation Soundness
+public export
+0 prfStagedCompileCircuitExpr : (fuel : Nat) -> (expr : QubitCircuitExpr) ->
+                                splice (stagedCompileCircuitExpr fuel expr) =
+                                  dihedronToMaxelN2 (collapseCircuitExpr (normalizeCircuitExpr fuel expr))
+prfStagedCompileCircuitExpr _ _ = Refl
+
+||| Audit: Staged circuit compiler cancels a composite sequence X * (X * (Z * Z)) to I_2.
+public export
+auditCircuitExprReductionProof : Bool
+auditCircuitExprReductionProof =
+  let expr = SeqGate GateX (SeqGate GateX (SeqGate GateZ GateZ))
+      compiled = evalStagedCompileCircuitExpr 10 expr
+  in compiled == qubitId2Maxel
+
