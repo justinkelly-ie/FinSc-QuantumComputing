@@ -93,8 +93,8 @@ prop_bellStateIsEntangled =
   let bell = bellStatePhiPlus
       p00 = prob00 bell
       p11 = prob11 bell
-  in p00.num == 1 && unwrapUnixel p00.den == 2 &&
-     p11.num == 1 && unwrapUnixel p11.den == 2 &&
+  in p00.num == 1 && p00.den == mkUnixel 2 &&
+     p11.num == 1 && p11.den == mkUnixel 2 &&
      bell.amp01 == 0 && bell.amp10 == 0
 
 -----------------------------------------------------------------------
