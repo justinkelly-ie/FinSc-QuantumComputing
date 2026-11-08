@@ -6,6 +6,11 @@ import public Stage1.Order.Preorder
 import public Stage0.OnSeq.FusedStream
 import public Stage0.Quantum.Qubit
 import public Stage0.Quantum.Circuit
+import public Stage0.Quantum.Register
+import public Stage0.Multiset
+import public Stage1.UnixelFraction
+import public Stage1.MultisetTree
+import public Stage1.QuadStream
 import Stage0.StructuralFuel
 import Data.Fuel
 
@@ -36,8 +41,82 @@ public export
 Eq QuantumStateToken where
   (MkQuantumToken b1 a1) == (MkQuantumToken b2 a2) = b1 == b2 && a1 == a2
 
+||| Streams a single Qubit basis state tokens directly from QubitVal without List allocation.
+public export
+streamQubitTokens : QubitVal pVal -> FusedStream QuantumStateToken
+streamQubitTokens q =
+  stream [ MkQuantumToken ZeroState (amp0 q)
+         , MkQuantumToken OneState  (amp1 q) ]
+
+||| Streams basis state tokens directly from an algebraic Multiset of QubitBasis tokens.
+public export
+streamQubitMultiset : Multiset BoxInt QubitBasis -> FusedStream QuantumStateToken
+streamQubitMultiset mset =
+  mapStream (\(b, amp) => MkQuantumToken b amp) (multisetToStream mset)
+
+||| 2-Qubit basis state (|00>, |01>, |10>, |11>).
+public export
+data QubitBasis2 = Basis00 | Basis01 | Basis10 | Basis11
+
+public export
+Eq QubitBasis2 where
+  Basis00 == Basis00 = True
+  Basis01 == Basis01 = True
+  Basis10 == Basis10 = True
+  Basis11 == Basis11 = True
+  _ == _ = False
+
+||| 2-Qubit Quantum State Token carrying 2-qubit basis state and amplitude.
+public export
+record QuantumStateToken2 where
+  constructor MkQuantumToken2
+  basis2    : QubitBasis2
+  amplitude : BoxInt
+
+public export
+Eq QuantumStateToken2 where
+  (MkQuantumToken2 b1 a1) == (MkQuantumToken2 b2 a2) = b1 == b2 && a1 == a2
+
+||| Streams a 2-qubit register into a deforested stream of basis state tokens without intermediate list allocations.
+public export
+streamRegister2Tokens : QubitRegister2 -> FusedStream QuantumStateToken2
+streamRegister2Tokens reg =
+  stream [ MkQuantumToken2 Basis00 (amp00 reg)
+         , MkQuantumToken2 Basis01 (amp01 reg)
+         , MkQuantumToken2 Basis10 (amp10 reg)
+         , MkQuantumToken2 Basis11 (amp11 reg)
+         ]
+
+||| Canonical conversion from a pair of single-qubit basis states to a 2-qubit basis state.
+public export
+qubitBasisPairTo2 : (QubitBasis, QubitBasis) -> QubitBasis2
+qubitBasisPairTo2 (ZeroState, ZeroState) = Basis00
+qubitBasisPairTo2 (ZeroState, OneState)  = Basis01
+qubitBasisPairTo2 (OneState,  ZeroState) = Basis10
+qubitBasisPairTo2 (OneState,  OneState)  = Basis11
+
+||| Deforested tensor product of two single-qubit state streams, producing a 2-qubit state stream in O(1) registers.
+public export
+streamEntangleRegisters : FusedStream QuantumStateToken -> FusedStream QuantumStateToken -> FusedStream QuantumStateToken2
+streamEntangleRegisters strmA strmB =
+  let strmA_pairs = mapStream (\tok => (basis tok, amplitude tok)) strmA
+      strmB_pairs = mapStream (\tok => (basis tok, amplitude tok)) strmB
+      tensorStrm  = streamTensorProduct strmA_pairs strmB_pairs
+  in mapStream (\((bA, bB), amp) => MkQuantumToken2 (qubitBasisPairTo2 (bA, bB)) amp) tensorStrm
+
+||| Evaluates 2-qubit measurement expectation value directly across a QuantumStateToken2 stream.
+%spec fuel
+public export
+fusedExpectationValue2StreamNat : (fuel : Nat) -> FusedStream QuantumStateToken2 -> BoxInt
+fusedExpectationValue2StreamNat fuel strm =
+  foldStreamNat fuel
+    (\acc, tok => addBox (mulBox (amplitude tok) (amplitude tok)) acc)
+    (intToBoxInt 0)
+    strm
+
 ||| Unfolds a list of quantum state amplitudes into a deforested QuantumStateStream.
-%inline public export
+||| Deprecated: Prefer `streamQubitTokens`, `streamQubitMultiset`, or `streamRegister2Tokens` over FusedStream.
+public export
 unfoldQuantumStateStream : List (QubitBasis, BoxInt) -> FusedStream QuantumStateToken
 unfoldQuantumStateStream items = MkStream nextStep items
   where
@@ -55,6 +134,7 @@ fusedExpectationValueStream f strm =
     strm
 
 ||| Total Nat fuel-bounded expectation value directly across a QuantumStateToken stream.
+%spec fuel
 public export
 fusedExpectationValueStreamNat : (fuel : Nat) -> FusedStream QuantumStateToken -> BoxInt
 fusedExpectationValueStreamNat fuel strm =
@@ -64,18 +144,21 @@ fusedExpectationValueStreamNat fuel strm =
     strm
 
 ||| Computes measurement expectation value \langle \psi | A | \psi \rangle across a stream using fueled fold.
+||| Deprecated: Prefer `fusedExpectationValueStream` directly over FusedStream.
 public export
 fusedExpectationValue : Fuel -> List (QubitBasis, BoxInt) -> BoxInt
 fusedExpectationValue f items =
   fusedExpectationValueStream f (unfoldQuantumStateStream items)
 
 ||| Total Nat fuel-bounded expectation value.
+||| Deprecated: Prefer `fusedExpectationValueStreamNat` directly over FusedStream.
 public export
 fusedExpectationValueNat : (fuel : Nat) -> List (QubitBasis, BoxInt) -> BoxInt
 fusedExpectationValueNat fuel items =
   fusedExpectationValueStreamNat fuel (unfoldQuantumStateStream items)
 
 ||| Total expectation value bounded by model-indexed GohFuel.
+||| Deprecated: Prefer `fusedExpectationValueStreamNat` directly over FusedStream.
 public export
 fusedExpectationValueFuelModel : GohFuel cap -> List (QubitBasis, BoxInt) -> BoxInt
 fusedExpectationValueFuelModel fuel items =
@@ -104,14 +187,24 @@ record TracePreservingStateStream (t0 : Nat) (t1 : Nat) (totalTrace : Nat) where
   streamData : FusedStream QuantumStateToken
   0 tracePrf : TracePreservingChannel t0 t1 totalTrace
 
+||| Constructs a deforested Quantum State Stream with a compile-time trace preservation witness directly from a FusedStream.
+public export
+makeTracePreservingStateStreamDirect : (t0 : Nat) -> (t1 : Nat) -> (totalTrace : Nat) ->
+                                       (0 prf : TracePreservingChannel t0 t1 totalTrace) ->
+                                       FusedStream QuantumStateToken ->
+                                       TracePreservingStateStream t0 t1 totalTrace
+makeTracePreservingStateStreamDirect t0 t1 tot prf strm =
+  MkTracePreservingStateStream strm prf
+
 ||| Constructs a deforested Quantum State Stream with a compile-time trace preservation witness.
+||| Deprecated: Prefer `makeTracePreservingStateStreamDirect` directly over FusedStream.
 public export
 makeTracePreservingStateStream : (t0 : Nat) -> (t1 : Nat) -> (totalTrace : Nat) ->
                                  (0 prf : TracePreservingChannel t0 t1 totalTrace) ->
                                  List (QubitBasis, BoxInt) ->
                                  TracePreservingStateStream t0 t1 totalTrace
 makeTracePreservingStateStream t0 t1 tot prf items =
-  MkTracePreservingStateStream (unfoldQuantumStateStream items) prf
+  makeTracePreservingStateStreamDirect t0 t1 tot prf (unfoldQuantumStateStream items)
 
 --------------------------------------------------------------------------------
 -- 4. RLE SPARSE QUANTUM DENSITY OPERATOR STREAMING
@@ -131,6 +224,7 @@ Eq DensityDyadToken where
     k1 == k2 && b1 == b2 && w1 == w2
 
 ||| Computes trace Tr(\rho) directly over an RLE stream of density dyads with Fuel.
+%spec f
 public export
 streamTraceDensity : Fuel -> FusedStream DensityDyadToken -> BoxInt
 streamTraceDensity f strm =
@@ -143,6 +237,7 @@ streamTraceDensity f strm =
     strm
 
 ||| Computes trace Tr(\rho) directly over an RLE stream of density dyads with Nat fuel.
+%spec fuel
 public export
 streamTraceDensityNat : Nat -> FusedStream DensityDyadToken -> BoxInt
 streamTraceDensityNat fuel strm =
@@ -155,6 +250,7 @@ streamTraceDensityNat fuel strm =
     strm
 
 ||| Computes quantum purity Tr(\rho^2) directly over an RLE stream with Fuel.
+%spec f
 public export
 streamQuantumPurity : Fuel -> FusedStream DensityDyadToken -> BoxInt
 streamQuantumPurity f strm =
@@ -167,6 +263,7 @@ streamQuantumPurity f strm =
     strm
 
 ||| Computes quantum purity Tr(\rho^2) directly over an RLE stream with Nat fuel.
+%spec fuel
 public export
 streamQuantumPurityNat : Nat -> FusedStream DensityDyadToken -> BoxInt
 streamQuantumPurityNat fuel strm =
@@ -236,6 +333,7 @@ streamLindbladDecoherenceLoss gamma (MkStream next seed) =
     (MkStream next seed)
 
 ||| Folds total dissipated entropy from Lindblad decoherence directly across the stream.
+%spec fuel
 public export
 fusedLindbladDissipatedEntropyNat : (fuel : Nat) -> (gamma : BoxInt) -> FusedStream DensityDyadToken -> BoxInt
 fusedLindbladDissipatedEntropyNat fuel gamma strm =

@@ -47,4 +47,8 @@ densityMatrixMaxelChannel space densityMatrix stateVexel =
 ||| Proof witness exporter for Dihedral phase channels
 public export
 auditDihedralPhaseChannelsProof : Bool
-auditDihedralPhaseChannelsProof = True
+auditDihedralPhaseChannelsProof =
+  let sample = MkDihedronVal (intToBoxInt 3) (intToBoxInt 4) (intToBoxInt 1) (intToBoxInt 2)
+  in prop_hadamardInvolution sample &&
+     prop_redSqueezeQuadranceConservation sample &&
+     prop_greenNilpotentDecay sample

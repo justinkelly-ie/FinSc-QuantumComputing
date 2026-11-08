@@ -58,4 +58,5 @@ prop_balancedOracleDeterministic =
 ||| Proof witness exporter for Deutsch-Jozsa Oracle Supremacy
 public export
 auditDeutschJozsaProof : Bool
-auditDeutschJozsaProof = True
+auditDeutschJozsaProof =
+  prop_constantOracleDeterministic && prop_balancedOracleDeterministic

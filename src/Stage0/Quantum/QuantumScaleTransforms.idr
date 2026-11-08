@@ -169,4 +169,10 @@ prfStagedQuantumCircuitPipeline qs = inverseSpliceQuote (quadStreamToQuantumCirc
 ||| Proof witness exporter for Quantum ScaleTransform Plugin
 public export
 auditQuantumScaleTransformProof : Bool
-auditQuantumScaleTransformProof = True
+auditQuantumScaleTransformProof =
+  let t : MultisetTensor (QubitFunctor Nat) Nat
+      t = AddM (MkQubitFunctor (MkConcreteQubit (intToBoxInt 1)) 1, 2) (intToBoxInt 1) ZeroM
+      pushed : QuantumCircuitMacroDomain
+      pushed = f_pushforward (MkConcreteQubit (intToBoxInt 27))
+  in qubitCircuitHomTensorInv (qubitCircuitHomTensorIso t) == t &&
+     pushed == MkQuantumCircuitMacro (intToBoxInt 27)
