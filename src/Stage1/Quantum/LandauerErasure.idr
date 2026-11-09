@@ -1,13 +1,12 @@
 module Stage1.Quantum.LandauerErasure
 
 import Stage0.Singleton.Bit
-import Stage0.Singleton.Sing
 import Stage0.Multiset
 import Stage0.BoxInt
 
 %default total
 
-||| Resets 1 Boolean Singleton Bit and emits 1 unit of dissipation heat
+||| Resets 1 Boolean Bit and emits 1 unit of dissipation heat
 public export
 eraseBitWithHeat : Bit -> (Bit, Nat)
 eraseBitWithHeat b =

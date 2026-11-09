@@ -1,7 +1,6 @@
 module Stage0.Quantum.DeutschJozsa
 
 import Stage0.Singleton.Bit
-import Stage0.Singleton.Sing
 import Stage0.Multiset
 import Stage0.BoxInt
 import Stage0.Quantum.Qubit
