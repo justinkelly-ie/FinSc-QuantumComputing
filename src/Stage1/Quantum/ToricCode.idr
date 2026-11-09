@@ -1,6 +1,6 @@
 module Stage1.Quantum.ToricCode
 
-import Stage0.Singleton.Bit
+import Stage0.Bit
 import Stage1.Dihedron
 import Stage0.BoxInt
 import Stage0.PrimeMultiset

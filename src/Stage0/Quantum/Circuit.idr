@@ -1,6 +1,6 @@
 module Stage0.Quantum.Circuit
 
-import Stage0.Singleton.Bit
+import Stage0.Bit
 import Stage0.Token
 import Stage1.Dihedron
 import Stage0.BoxInt

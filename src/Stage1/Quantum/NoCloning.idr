@@ -1,7 +1,7 @@
 module Stage1.Quantum.NoCloning
 
 import Stage0.Quantum.Qubit
-import Stage0.Singleton.Bit
+import Stage0.Bit
 import Stage0.Interfaces
 
 %default total

@@ -1,6 +1,6 @@
 module Stage1.Quantum.LandauerErasure
 
-import Stage0.Singleton.Bit
+import Stage0.Bit
 import Stage0.Multiset
 import Stage0.BoxInt
 

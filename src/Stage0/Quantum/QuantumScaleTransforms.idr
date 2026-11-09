@@ -1,6 +1,6 @@
 module Stage0.Quantum.QuantumScaleTransforms
 
-import Stage0.Singleton.Bit
+import Stage0.Bit
 import public Stage0.BoxInt
 import public Stage0.Multiset
 import public Stage1.ScaleTransform

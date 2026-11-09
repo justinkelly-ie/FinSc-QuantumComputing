@@ -1,6 +1,6 @@
 module Stage1.Quantum.DihedralChannels
 
-import Stage0.Singleton.Bit
+import Stage0.Bit
 import Stage1.Dihedron
 import Stage1.Subalgebras
 import Stage1.ChromoCategory
