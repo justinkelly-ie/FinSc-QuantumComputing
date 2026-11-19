@@ -65,11 +65,11 @@ Show QuantumCircuitMacroDomain where
 public export
 quadStreamToQuantumCircuit : QuadStreamMultiset BoxInt -> QuantumCircuitMacroDomain
 quadStreamToQuantumCircuit (MkQuadStream e h p s) =
-  MkQuantumCircuitMacro (multisetSum e + multisetSum h + multisetSum p)
+  MkQuantumCircuitMacro (totalMassBox e + totalMassBox h + totalMassBox p)
 
 ||| Heterogeneous MultisetScaleAdjunction instance (f_* ⊣ f^*) between ConcreteQubitState and QuantumCircuitMacroDomain
 public export
-MultisetScaleAdjunction ConcreteQubitState QuantumCircuitMacroDomain where
+MultisetScaleDuality ConcreteQubitState QuantumCircuitMacroDomain where
   f_pushforward (MkConcreteQubit w) = MkQuantumCircuitMacro w
   f_pullback (MkQuantumCircuitMacro w) = MkConcreteQubit w
   verifyUnit _   = Refl
@@ -139,7 +139,7 @@ proofQubitCircuitHomInv (AddM (val, MkCircuitFunctor (MkQuantumCircuitMacro w) p
 
 ||| Category-Theoretic MultisetAdjunction instance L_Qubit ⊣ R_Circuit for Quantum Gate Synthesis
 public export
-MultisetAdjunction QubitFunctor CircuitFunctor where
+MultisetDuality QubitFunctor CircuitFunctor where
   leftAdjoint x = MkQubitFunctor (MkConcreteQubit (intToBoxInt 0)) x
   rightAdjoint (MkQubitFunctor _ x) = x
   homTensorIso = qubitCircuitHomTensorIso
@@ -148,8 +148,8 @@ MultisetAdjunction QubitFunctor CircuitFunctor where
   verifyHomInv = proofQubitCircuitHomInv
 
 public export
-StrictReflectionFunctor QubitFunctor CircuitFunctor where
-  reflectionAdjunction = %search
+StrictReflectionDuality QubitFunctor CircuitFunctor where
+  reflectionDuality = %search
   reflectionRefl _ = Refl
 
 --------------------------------------------------------------------------------
@@ -157,7 +157,7 @@ StrictReflectionFunctor QubitFunctor CircuitFunctor where
 --------------------------------------------------------------------------------
 
 ||| Deforested 2LTT staged code generator transducer for Quantum Circuit compilation.
-%inline public export
+public export
 stagedQuantumCircuitPipeline : QuadStreamMultiset BoxInt -> Code QuantumCircuitMacroDomain
 stagedQuantumCircuitPipeline qs = quote (quadStreamToQuantumCircuit qs)
 

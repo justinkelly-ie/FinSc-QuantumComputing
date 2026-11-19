@@ -203,7 +203,7 @@ proofGateHomInv (AddM (val, MkGateMeasFunctor m b) w rest) =
 
 ||| MultisetAdjunction instance L_Gate ⊣ R_Gate for Quantum Gate Synthesis
 public export
-MultisetAdjunction GatePrepFunctor GateMeasFunctor where
+MultisetDuality GatePrepFunctor GateMeasFunctor where
   leftAdjoint x = MkGatePrepFunctor (intToBoxInt 0) x
   rightAdjoint (MkGatePrepFunctor _ x) = x
   homTensorIso = gateHomTensorIso
@@ -307,7 +307,7 @@ fuseCPTPChannels tracePrf (MkCPTPQuantumChannel m1 _) (MkCPTPQuantumChannel m2 _
 
 ||| 2LTT Staged Gate Fusion: Evaluates quantum channel fusion at compile-time Stage 1 (U_1)
 ||| and splices out the single fused CPTP channel matrix to Stage 0 (U_0).
-%inline public export
+public export
 stagedGateFusion : {t0, t1, t2, totalTrace : Nat} ->
                    (0 tracePrf : TracePreservingChannel t0 t2 totalTrace) ->
                    Lift (CPTPQuantumChannel t0 t1 totalTrace) ->
@@ -777,7 +777,9 @@ pauliXXTypedOperator = tensorOperator pauliXTypedOperator pauliXTypedOperator
 ||| Observes a typed 2-qubit operator into a sparse SquareMaxel 4 via twoBitBasisToPixel pushforward.
 public export
 observeTwoBitOperator : MultisetTensor (Bit, Bit) (Bit, Bit) -> SquareMaxel 4
-observeTwoBitOperator op = tensorToSquareMaxel (mapMultiset twoBitBasisToPixel op)
+observeTwoBitOperator op =
+  tensorToSquareMaxel
+    (foldMultiset (\pair, w, acc => acc <+> singletonCarrier (twoBitBasisToPixel pair) w) neutral op)
 
 ||| Verified Invariant: The algebraic pushforward of the typed operator tensor (pauliXTyped ⊗ pauliXTyped)
 ||| definitionally equals the coordinate-level sparse matrix pauliXXSquareMaxel.

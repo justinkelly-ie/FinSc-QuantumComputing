@@ -50,9 +50,9 @@ streamQubitTokens q =
 
 ||| Streams basis state tokens directly from an algebraic Multiset of QubitBasis tokens.
 public export
-streamQubitMultiset : Multiset BoxInt QubitBasis -> FusedStream QuantumStateToken
+streamQubitMultiset : Carrier QubitBasis -> FusedStream QuantumStateToken
 streamQubitMultiset mset =
-  mapStream (\(b, amp) => MkQuantumToken b amp) (multisetToStream mset)
+  mapStream (\(b, amp) => MkQuantumToken b amp) (streamBoxMultisetTree mset)
 
 ||| 2-Qubit basis state (|00>, |01>, |10>, |11>).
 public export
@@ -105,7 +105,6 @@ streamEntangleRegisters strmA strmB =
   in mapStream (\((bA, bB), amp) => MkQuantumToken2 (qubitBasisPairTo2 (bA, bB)) amp) tensorStrm
 
 ||| Evaluates 2-qubit measurement expectation value directly across a QuantumStateToken2 stream.
-%spec fuel
 public export
 fusedExpectationValue2StreamNat : (fuel : Nat) -> FusedStream QuantumStateToken2 -> BoxInt
 fusedExpectationValue2StreamNat fuel strm =
@@ -134,7 +133,6 @@ fusedExpectationValueStream f strm =
     strm
 
 ||| Total Nat fuel-bounded expectation value directly across a QuantumStateToken stream.
-%spec fuel
 public export
 fusedExpectationValueStreamNat : (fuel : Nat) -> FusedStream QuantumStateToken -> BoxInt
 fusedExpectationValueStreamNat fuel strm =
@@ -224,7 +222,6 @@ Eq DensityDyadToken where
     k1 == k2 && b1 == b2 && w1 == w2
 
 ||| Computes trace Tr(\rho) directly over an RLE stream of density dyads with Fuel.
-%spec f
 public export
 streamTraceDensity : Fuel -> FusedStream DensityDyadToken -> BoxInt
 streamTraceDensity f strm =
@@ -237,7 +234,6 @@ streamTraceDensity f strm =
     strm
 
 ||| Computes trace Tr(\rho) directly over an RLE stream of density dyads with Nat fuel.
-%spec fuel
 public export
 streamTraceDensityNat : Nat -> FusedStream DensityDyadToken -> BoxInt
 streamTraceDensityNat fuel strm =
@@ -250,7 +246,6 @@ streamTraceDensityNat fuel strm =
     strm
 
 ||| Computes quantum purity Tr(\rho^2) directly over an RLE stream with Fuel.
-%spec f
 public export
 streamQuantumPurity : Fuel -> FusedStream DensityDyadToken -> BoxInt
 streamQuantumPurity f strm =
@@ -263,7 +258,6 @@ streamQuantumPurity f strm =
     strm
 
 ||| Computes quantum purity Tr(\rho^2) directly over an RLE stream with Nat fuel.
-%spec fuel
 public export
 streamQuantumPurityNat : Nat -> FusedStream DensityDyadToken -> BoxInt
 streamQuantumPurityNat fuel strm =
@@ -333,7 +327,6 @@ streamLindbladDecoherenceLoss gamma (MkStream next seed) =
     (MkStream next seed)
 
 ||| Folds total dissipated entropy from Lindblad decoherence directly across the stream.
-%spec fuel
 public export
 fusedLindbladDissipatedEntropyNat : (fuel : Nat) -> (gamma : BoxInt) -> FusedStream DensityDyadToken -> BoxInt
 fusedLindbladDissipatedEntropyNat fuel gamma strm =

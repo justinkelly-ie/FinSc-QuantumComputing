@@ -34,7 +34,7 @@ prop_greenNilpotentDecay : Dihedron -> Bool
 prop_greenNilpotentDecay val =
   (scalarA (mulDihedron val (MkDihedronVal 1 0 0 1))) == (scalarA val) + (greenD val)
 
-||| Quantum Density Matrix Channel acting on state space via sparse ChromoCategory Maxel transformations
+||| Quantum Density Matrix Channel acting on state space via sparse chromogeometric Maxel transformations
 public export
 densityMatrixMaxelChannel : {d : Nat} -> {c : MetricColor} ->
                             (0 space : VexelSpace d c) ->

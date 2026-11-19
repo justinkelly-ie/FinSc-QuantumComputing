@@ -5,6 +5,8 @@ import Stage1.Dihedron
 import Stage0.BoxInt
 import Stage0.PrimeMultiset
 import Stage0.Multiset
+import Stage0.HereditaryMSet
+import Stage0.SignedBit
 import Stage1.QuadStream
 
 %default total
@@ -24,6 +26,18 @@ Eq AnyonToken where
   FermionDyonic  == FermionDyonic  = True
   _              == _              = False
 
+public export
+Ord AnyonToken where
+  compare x y = compare (tag x) (tag y)
+    where
+      tag : AnyonToken -> Nat
+      tag ElectricCharge = 0
+      tag MagneticFlux   = 1
+      tag FermionDyonic  = 2
+
+public export
+DiscreteCoord AnyonToken where
+
 ||| Fusion of Electric charge e and Magnetic flux m yields Fermion dyon \epsilon.
 public export
 fuseAnyons : AnyonToken -> AnyonToken -> AnyonToken
@@ -33,15 +47,21 @@ fuseAnyons x _                         = x
 
 ||| Multiset fusion transform over anyon excitation bag.
 public export
-fuseAnyonMultiset : Multiset BoxInt AnyonToken -> Multiset BoxInt AnyonToken
+fuseAnyonMultiset : Carrier AnyonToken -> Carrier AnyonToken
 fuseAnyonMultiset m =
-  let eCount = multiplicity ElectricCharge m
-      mCount = multiplicity MagneticFlux m
-      fCount = if eCount > intToBoxInt 0 && mCount > intToBoxInt 0 then intToBoxInt 1 else intToBoxInt 0
-      e' = eCount - fCount
-      m' = mCount - fCount
-      f  = multiplicity FermionDyonic m + fCount
-  in AddM ElectricCharge e' (AddM MagneticFlux m' (AddM FermionDyonic f ZeroM))
+  let zero = intToBoxInt 0
+      eCount = lookupCarrier ElectricCharge m
+      mCount = lookupCarrier MagneticFlux m
+  in if eCount <= zero || mCount <= zero
+       then m
+       else
+         let fCount = intToBoxInt 1
+             e' = eCount - fCount
+             m' = mCount - fCount
+             f  = lookupCarrier FermionDyonic m + fCount
+             tF = if f == zero then neutral else singletonCarrier FermionDyonic f
+             tM = if m' == zero then tF else singletonCarrier MagneticFlux m' <+> tF
+         in if e' == zero then tM else singletonCarrier ElectricCharge e' <+> tM
 
 ||| QuadStream partitioning of Toric Code topological states:
 |||   ellipticStream   : Encoded Logical Qubit Subspace
@@ -49,24 +69,32 @@ fuseAnyonMultiset m =
 |||   parabolicStream  : Dephasing & Dissipation Channel
 |||   substrateStream  : Syndrome Detection Parity Law Ledger
 public export
-toricCodeToQuadStream : Multiset BoxInt AnyonToken -> QuadStreamMultiset AnyonToken
+toricCodeToQuadStream : Carrier AnyonToken -> QuadStreamMultiset AnyonToken
 toricCodeToQuadStream anyons =
   MkQuadStream
-    ZeroM
+    neutral
     anyons
-    ZeroM
-    ZeroM
+    neutral
+    neutral
 
 ||| Audits topological anyon fusion e × m -> \epsilon over multiset excitation bag:
 public export
 auditMultisetAnyonFusionProof : Bool
 auditMultisetAnyonFusionProof =
-  let initBag : Multiset BoxInt AnyonToken
-      initBag = AddM ElectricCharge (intToBoxInt 1) (AddM MagneticFlux (intToBoxInt 1) ZeroM)
+  let initBag : Carrier AnyonToken
+      initBag = singletonCarrier ElectricCharge (intToBoxInt 1) <+> singletonCarrier MagneticFlux (intToBoxInt 1)
       fused   = fuseAnyonMultiset initBag
-  in multiplicity FermionDyonic fused == intToBoxInt 1 &&
-     multiplicity ElectricCharge fused == intToBoxInt 0 &&
-     multiplicity MagneticFlux fused == intToBoxInt 0
+      z2Site1 : HereditaryMSet MultisetBit
+      z2Site1 = MkHMSet (setBox (MkHMSet BoxLeaf) OneBit BoxLeaf)
+      z2Site2 : HereditaryMSet MultisetBit
+      z2Site2 = MkHMSet (setBox z2Site1 OneBit BoxLeaf)
+      z2Cancel = (z2Site1 <+> z2Site1) == emptyHMSet
+      z2Pair   = (z2Site1 <+> z2Site2) /= emptyHMSet
+      z2Double = ((z2Site1 <+> z2Site2) <+> (z2Site1 <+> z2Site2)) == emptyHMSet
+  in lookupCarrier FermionDyonic fused == intToBoxInt 1 &&
+     lookupCarrier ElectricCharge fused == intToBoxInt 0 &&
+     lookupCarrier MagneticFlux fused == intToBoxInt 0 &&
+     z2Cancel && z2Pair && z2Double
 
 ------------------------------------------------------------------------
 -- 1. PAULI OPERATORS & STABILIZERS
